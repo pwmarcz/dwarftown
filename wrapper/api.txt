@@ -1,0 +1,470 @@
+tcod.BKGND_ADD
+tcod.BKGND_ADDA
+tcod.BKGND_ALPH
+tcod.BKGND_BURN
+tcod.BKGND_COLOR_BURN
+tcod.BKGND_COLOR_DODGE
+tcod.BKGND_DARKEN
+tcod.BKGND_DEFAULT
+tcod.BKGND_LIGHTEN
+tcod.BKGND_MULTIPLY
+tcod.BKGND_NONE
+tcod.BKGND_OVERLAY
+tcod.BKGND_SCREEN
+tcod.BKGND_SET
+tcod.BackgroundAlphaMask
+tcod.Bsp
+tcod.CBackgroundHelpers
+tcod.CENTER
+tcod.CHAR_ARROW2_E
+tcod.CHAR_ARROW2_N
+tcod.CHAR_ARROW2_S
+tcod.CHAR_ARROW2_W
+tcod.CHAR_ARROW_E
+tcod.CHAR_ARROW_N
+tcod.CHAR_ARROW_S
+tcod.CHAR_ARROW_W
+tcod.CHAR_BLOCK1
+tcod.CHAR_BLOCK2
+tcod.CHAR_BLOCK3
+tcod.CHAR_BULLET
+tcod.CHAR_BULLET_INV
+tcod.CHAR_BULLET_SQUARE
+tcod.CHAR_CENT
+tcod.CHAR_CLUB
+tcod.CHAR_COPYRIGHT
+tcod.CHAR_CROSS
+tcod.CHAR_CURRENCY
+tcod.CHAR_DARROW_H
+tcod.CHAR_DARROW_V
+tcod.CHAR_DCROSS
+tcod.CHAR_DHLINE
+tcod.CHAR_DIAMOND
+tcod.CHAR_DIVISION
+tcod.CHAR_DNE
+tcod.CHAR_DNW
+tcod.CHAR_DSE
+tcod.CHAR_DSW
+tcod.CHAR_DTEEE
+tcod.CHAR_DTEEN
+tcod.CHAR_DTEES
+tcod.CHAR_DTEEW
+tcod.CHAR_DVLINE
+tcod.CHAR_EXCLAM_DOUBLE
+tcod.CHAR_FEMALE
+tcod.CHAR_FUNCTION
+tcod.CHAR_GRADE
+tcod.CHAR_HALF
+tcod.CHAR_HEART
+tcod.CHAR_HLINE
+tcod.CHAR_LIGHT
+tcod.CHAR_MALE
+tcod.CHAR_MULTIPLICATION
+tcod.CHAR_NE
+tcod.CHAR_NOTE
+tcod.CHAR_NOTE_DOUBLE
+tcod.CHAR_NW
+tcod.CHAR_ONE_QUARTER
+tcod.CHAR_PILCROW
+tcod.CHAR_POUND
+tcod.CHAR_POW1
+tcod.CHAR_POW2
+tcod.CHAR_POW3
+tcod.CHAR_RESERVED
+tcod.CHAR_SE
+tcod.CHAR_SECTION
+tcod.CHAR_SMILIE
+tcod.CHAR_SMILIE_INV
+tcod.CHAR_SPADE
+tcod.CHAR_SUBP_DIAG
+tcod.CHAR_SUBP_E
+tcod.CHAR_SUBP_N
+tcod.CHAR_SUBP_NE
+tcod.CHAR_SUBP_NW
+tcod.CHAR_SUBP_SE
+tcod.CHAR_SUBP_SW
+tcod.CHAR_SW
+tcod.CHAR_TEEE
+tcod.CHAR_TEEN
+tcod.CHAR_TEES
+tcod.CHAR_TEEW
+tcod.CHAR_THREE_QUARTERS
+tcod.CHAR_UMLAUT
+tcod.CHAR_VLINE
+tcod.CHAR_YEN
+tcod.Color
+tcod.Console
+tcod.DISTRIBUTION_GAUSSIAN
+tcod.DISTRIBUTION_GAUSSIAN_INVERSE
+tcod.DISTRIBUTION_GAUSSIAN_RANGE
+tcod.DISTRIBUTION_GAUSSIAN_RANGE_INVERSE
+tcod.DISTRIBUTION_LINEAR
+tcod.Dijkstra
+tcod.FONT_LAYOUT_ASCII_INCOL
+tcod.FONT_LAYOUT_ASCII_INROW
+tcod.FONT_LAYOUT_TCOD
+tcod.FONT_TYPE_GRAYSCALE
+tcod.FONT_TYPE_GREYSCALE
+tcod.FOV_BASIC
+tcod.FOV_DIAMOND
+tcod.FOV_PERMISSIVE_0
+tcod.FOV_PERMISSIVE_1
+tcod.FOV_PERMISSIVE_2
+tcod.FOV_PERMISSIVE_3
+tcod.FOV_PERMISSIVE_4
+tcod.FOV_PERMISSIVE_5
+tcod.FOV_PERMISSIVE_6
+tcod.FOV_PERMISSIVE_7
+tcod.FOV_PERMISSIVE_8
+tcod.FOV_RESTRICTIVE
+tcod.FOV_SHADOW
+tcod.HeightMap
+tcod.Image
+tcod.KEY_PRESSED
+tcod.KEY_RELEASED
+tcod.LEFT
+tcod.Line
+tcod.Map
+tcod.Mouse
+tcod.NB_RENDERERS
+tcod.NOISE_DEFAULT_HURST
+tcod.NOISE_DEFAULT_LACUNARITY
+tcod.NOISE_MAX_DIMENSIONS
+tcod.NOISE_MAX_OCTAVES
+tcod.NameGenerator
+tcod.Noise
+tcod.Path
+tcod.RENDERER_GLSL
+tcod.RENDERER_OPENGL
+tcod.RENDERER_SDL
+tcod.RIGHT
+tcod.RNG_CMWC
+tcod.RNG_MT
+tcod.Random
+tcod.StringVector
+tcod.System
+tcod.Text
+tcod.cbackgroundhelpers
+  tcod.cbackgroundhelpers.CreateAddAlphaBackground
+  tcod.cbackgroundhelpers.CreateAlphaBackground
+tcod.color
+  tcod.color.amber
+  tcod.color.azure
+  tcod.color.black
+  tcod.color.blue
+  tcod.color.brass
+  tcod.color.celadon
+  tcod.color.chartreuse
+  tcod.color.copper
+  tcod.color.crimson
+  tcod.color.cyan
+  tcod.color.darkAmber
+  tcod.color.darkAzure
+  tcod.color.darkBlue
+  tcod.color.darkChartreuse
+  tcod.color.darkCrimson
+  tcod.color.darkCyan
+  tcod.color.darkFlame
+  tcod.color.darkFuchsia
+  tcod.color.darkGreen
+  tcod.color.darkGrey
+  tcod.color.darkHan
+  tcod.color.darkLime
+  tcod.color.darkMagenta
+  tcod.color.darkOrange
+  tcod.color.darkPink
+  tcod.color.darkPurple
+  tcod.color.darkRed
+  tcod.color.darkSea
+  tcod.color.darkSepia
+  tcod.color.darkSky
+  tcod.color.darkTurquoise
+  tcod.color.darkViolet
+  tcod.color.darkYellow
+  tcod.color.darkerAmber
+  tcod.color.darkerAzure
+  tcod.color.darkerBlue
+  tcod.color.darkerChartreuse
+  tcod.color.darkerCrimson
+  tcod.color.darkerCyan
+  tcod.color.darkerFlame
+  tcod.color.darkerFuchsia
+  tcod.color.darkerGreen
+  tcod.color.darkerGrey
+  tcod.color.darkerHan
+  tcod.color.darkerLime
+  tcod.color.darkerMagenta
+  tcod.color.darkerOrange
+  tcod.color.darkerPink
+  tcod.color.darkerPurple
+  tcod.color.darkerRed
+  tcod.color.darkerSea
+  tcod.color.darkerSepia
+  tcod.color.darkerSky
+  tcod.color.darkerTurquoise
+  tcod.color.darkerViolet
+  tcod.color.darkerYellow
+  tcod.color.darkestAmber
+  tcod.color.darkestAzure
+  tcod.color.darkestBlue
+  tcod.color.darkestChartreuse
+  tcod.color.darkestCrimson
+  tcod.color.darkestCyan
+  tcod.color.darkestFlame
+  tcod.color.darkestFuchsia
+  tcod.color.darkestGreen
+  tcod.color.darkestGrey
+  tcod.color.darkestHan
+  tcod.color.darkestLime
+  tcod.color.darkestMagenta
+  tcod.color.darkestOrange
+  tcod.color.darkestPink
+  tcod.color.darkestPurple
+  tcod.color.darkestRed
+  tcod.color.darkestSea
+  tcod.color.darkestSepia
+  tcod.color.darkestSky
+  tcod.color.darkestTurquoise
+  tcod.color.darkestViolet
+  tcod.color.darkestYellow
+  tcod.color.desaturatedAmber
+  tcod.color.desaturatedAzure
+  tcod.color.desaturatedBlue
+  tcod.color.desaturatedChartreuse
+  tcod.color.desaturatedCrimson
+  tcod.color.desaturatedCyan
+  tcod.color.desaturatedFlame
+  tcod.color.desaturatedFuchsia
+  tcod.color.desaturatedGreen
+  tcod.color.desaturatedHan
+  tcod.color.desaturatedLime
+  tcod.color.desaturatedMagenta
+  tcod.color.desaturatedOrange
+  tcod.color.desaturatedPink
+  tcod.color.desaturatedPurple
+  tcod.color.desaturatedRed
+  tcod.color.desaturatedSea
+  tcod.color.desaturatedSky
+  tcod.color.desaturatedTurquoise
+  tcod.color.desaturatedViolet
+  tcod.color.desaturatedYellow
+  tcod.color.flame
+  tcod.color.fuchsia
+  tcod.color.gold
+  tcod.color.green
+  tcod.color.grey
+  tcod.color.han
+  tcod.color.lerp
+  tcod.color.lightAmber
+  tcod.color.lightAzure
+  tcod.color.lightBlue
+  tcod.color.lightChartreuse
+  tcod.color.lightCrimson
+  tcod.color.lightCyan
+  tcod.color.lightFlame
+  tcod.color.lightFuchsia
+  tcod.color.lightGreen
+  tcod.color.lightGrey
+  tcod.color.lightHan
+  tcod.color.lightLime
+  tcod.color.lightMagenta
+  tcod.color.lightOrange
+  tcod.color.lightPink
+  tcod.color.lightPurple
+  tcod.color.lightRed
+  tcod.color.lightSea
+  tcod.color.lightSepia
+  tcod.color.lightSky
+  tcod.color.lightTurquoise
+  tcod.color.lightViolet
+  tcod.color.lightYellow
+  tcod.color.lighterAmber
+  tcod.color.lighterAzure
+  tcod.color.lighterBlue
+  tcod.color.lighterChartreuse
+  tcod.color.lighterCrimson
+  tcod.color.lighterCyan
+  tcod.color.lighterFlame
+  tcod.color.lighterFuchsia
+  tcod.color.lighterGreen
+  tcod.color.lighterGrey
+  tcod.color.lighterHan
+  tcod.color.lighterLime
+  tcod.color.lighterMagenta
+  tcod.color.lighterOrange
+  tcod.color.lighterPink
+  tcod.color.lighterPurple
+  tcod.color.lighterRed
+  tcod.color.lighterSea
+  tcod.color.lighterSepia
+  tcod.color.lighterSky
+  tcod.color.lighterTurquoise
+  tcod.color.lighterViolet
+  tcod.color.lighterYellow
+  tcod.color.lightestAmber
+  tcod.color.lightestAzure
+  tcod.color.lightestBlue
+  tcod.color.lightestChartreuse
+  tcod.color.lightestCrimson
+  tcod.color.lightestCyan
+  tcod.color.lightestFlame
+  tcod.color.lightestFuchsia
+  tcod.color.lightestGreen
+  tcod.color.lightestGrey
+  tcod.color.lightestHan
+  tcod.color.lightestLime
+  tcod.color.lightestMagenta
+  tcod.color.lightestOrange
+  tcod.color.lightestPink
+  tcod.color.lightestPurple
+  tcod.color.lightestRed
+  tcod.color.lightestSea
+  tcod.color.lightestSepia
+  tcod.color.lightestSky
+  tcod.color.lightestTurquoise
+  tcod.color.lightestViolet
+  tcod.color.lightestYellow
+  tcod.color.lime
+  tcod.color.magenta
+  tcod.color.orange
+  tcod.color.peach
+  tcod.color.pink
+  tcod.color.purple
+  tcod.color.red
+  tcod.color.sea
+  tcod.color.sepia
+  tcod.color.silver
+  tcod.color.sky
+  tcod.color.turquoise
+  tcod.color.violet
+  tcod.color.white
+  tcod.color.yellow
+tcod.console
+  tcod.console.blit
+  tcod.console.checkForKeypress
+  tcod.console.credits
+  tcod.console.disableKeyboardRepeat
+  tcod.console.flush
+  tcod.console.getColorControlString
+  tcod.console.getFade
+  tcod.console.getFadingColor
+  tcod.console.getRGBColorControlString
+  tcod.console.initRoot
+  tcod.console.isFullscreen
+  tcod.console.isKeyPressed
+  tcod.console.isWindowClosed
+  tcod.console.mapAsciiCodeToFont
+  tcod.console.mapAsciiCodesToFont
+  tcod.console.mapStringToFont
+  tcod.console.renderCredits
+  tcod.console.resetCredits
+  tcod.console.setCustomFont
+  tcod.console.setFade
+  tcod.console.setFullscreen
+  tcod.console.setKeyboardRepeat
+  tcod.console.setWindowTitle
+  tcod.console.waitForKeypress
+tcod.dice_t
+tcod.k
+  tcod.k.0
+  tcod.k.1
+  tcod.k.2
+  tcod.k.3
+  tcod.k.4
+  tcod.k.5
+  tcod.k.6
+  tcod.k.7
+  tcod.k.8
+  tcod.k.9
+  tcod.k.ALT
+  tcod.k.APPS
+  tcod.k.BACKSPACE
+  tcod.k.CAPSLOCK
+  tcod.k.CHAR
+  tcod.k.CONTROL
+  tcod.k.DELETE
+  tcod.k.DOWN
+  tcod.k.END
+  tcod.k.ENTER
+  tcod.k.ESCAPE
+  tcod.k.F1
+  tcod.k.F10
+  tcod.k.F11
+  tcod.k.F12
+  tcod.k.F2
+  tcod.k.F3
+  tcod.k.F4
+  tcod.k.F5
+  tcod.k.F6
+  tcod.k.F7
+  tcod.k.F8
+  tcod.k.F9
+  tcod.k.HOME
+  tcod.k.INSERT
+  tcod.k.KP0
+  tcod.k.KP1
+  tcod.k.KP2
+  tcod.k.KP3
+  tcod.k.KP4
+  tcod.k.KP5
+  tcod.k.KP6
+  tcod.k.KP7
+  tcod.k.KP8
+  tcod.k.KP9
+  tcod.k.KPADD
+  tcod.k.KPDEC
+  tcod.k.KPDIV
+  tcod.k.KPENTER
+  tcod.k.KPMUL
+  tcod.k.KPSUB
+  tcod.k.LEFT
+  tcod.k.LWIN
+  tcod.k.NONE
+  tcod.k.NUMLOCK
+  tcod.k.PAGEDOWN
+  tcod.k.PAGEUP
+  tcod.k.PAUSE
+  tcod.k.PRINTSCREEN
+  tcod.k.RIGHT
+  tcod.k.RWIN
+  tcod.k.SCROLLLOCK
+  tcod.k.SHIFT
+  tcod.k.SPACE
+  tcod.k.TAB
+  tcod.k.UP
+tcod.key_t
+tcod.line
+  tcod.line.Listener
+  tcod.line.init
+  tcod.line.line
+  tcod.line.step
+tcod.mouse
+  tcod.mouse.getStatus
+  tcod.mouse.isCursorVisible
+  tcod.mouse.moveMouse
+  tcod.mouse.showCursor
+tcod.namegenerator
+  tcod.namegenerator.destroy
+  tcod.namegenerator.generate
+  tcod.namegenerator.generateCustom
+  tcod.namegenerator.getSets
+  tcod.namegenerator.parse
+tcod.path
+  tcod.path.Callback
+tcod.random
+  tcod.random.getInstance
+tcod.system
+  tcod.system.fileExists
+  tcod.system.forceFullscreenResolution
+  tcod.system.getCharSize
+  tcod.system.getCurrentResolution
+  tcod.system.getElapsedMilli
+  tcod.system.getElapsedSeconds
+  tcod.system.getFps
+  tcod.system.getFullscreenOffsets
+  tcod.system.getLastFrameLength
+  tcod.system.getRenderer
+  tcod.system.saveScreenshot
+  tcod.system.setFps
+  tcod.system.setRenderer
+  tcod.system.sleepMilli
