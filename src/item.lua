@@ -40,3 +40,25 @@ Sword = Weapon:subclass {
    attackDice = {1, 6, 0},
 }
 
+Armor = Item:subclass {
+   armor = 0,
+}
+
+function Armor.get:descr()
+   return ('%s [+%d]'):format(
+      Item.get.descr(self),
+      self.armor)
+end
+
+function Armor:onEquip(player)
+   player.armor = player.armor + self.armor
+end
+
+function Armor:onUnequip(player)
+   player.armor = player.armor - self.armor
+end
+
+Helmet = Armor:subclass {
+   armor = 1,
+   slot = 'helmet',
+}

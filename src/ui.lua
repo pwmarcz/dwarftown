@@ -5,6 +5,8 @@ require 'map'
 require 'game'
 require 'util'
 
+local C = tcod.color
+
 SCREEN_W = 80
 SCREEN_H = 25
 
@@ -64,7 +66,7 @@ function message(a, ...)
    local msg = {new = true}
    if type(a) == 'string' then
       msg.text = string.format(a, ...)
-      msg.color = tcod.color.white
+      msg.color = C.white
    else
       msg.text = string.format(...)
       msg.color = a
@@ -93,10 +95,10 @@ function promptItems(items, ...)
    update()
    local text = string.format(...)
    itemConsole = tcod.Console(VIEW_W, #items + 2)
-   itemConsole:setDefaultForeground(tcod.color.white)
+   itemConsole:setDefaultForeground(C.white)
    itemConsole:print(0, 0, text)
 
-   itemConsole:setDefaultForeground(tcod.color.lightGrey)
+   itemConsole:setDefaultForeground(C.lightGrey)
 
    local letter = string.byte('a')
    for i, item in ipairs(items) do
@@ -109,7 +111,7 @@ function promptItems(items, ...)
 
       local char, color = glyph(item.glyph)
       itemConsole:putCharEx(4, i+1, char, color,
-                            tcod.color.black)
+                            C.black)
    end
 
    tcod.console.blit(itemConsole, 0, 0, VIEW_W, #items + 2,
@@ -140,7 +142,7 @@ function drawStatus(player)
    }
 
    statusConsole:clear()
-   statusConsole:setDefaultForeground(tcod.color.lightGrey)
+   statusConsole:setDefaultForeground(C.lightGrey)
    for i, msg in ipairs(lines) do
       statusConsole:print(0, i-1, string.format(unpack(msg)))
    end
@@ -198,7 +200,7 @@ function drawMap(xPos, yPos)
          if tile then
             local char, color = tileAppearance(tile)
             viewConsole:putCharEx(xv, yv, char, color,
-                                  tcod.color.black)
+                                  C.black)
          end
       end
    end
@@ -206,7 +208,7 @@ end
 
 function glyph(g)
    local char = string.byte(g[1])
-   local color = g[2] or tcod.color.pink
+   local color = g[2] or C.pink
    return char, color
 end
 
@@ -242,10 +244,10 @@ function look()
       local char = viewConsole:getChar(xv, yv)
       local color = viewConsole:getCharForeground(xv, yv)
       if char == string.byte(' ') then
-         color = tcod.color.white
+         color = C.white
       end
 
-      viewConsole:putCharEx(xv, yv, char, tcod.color.black, color)
+      viewConsole:putCharEx(xv, yv, char, C.black, color)
 
       -- Describe position
       local x, y = xv - xc + game.player.x, yv - yc + game.player.y
@@ -254,7 +256,7 @@ function look()
       blitConsoles()
 
       -- Clean up
-      viewConsole:putCharEx(xv, yv, char, color, tcod.color.black)
+      viewConsole:putCharEx(xv, yv, char, color, C.black)
       while #messages > messagesLevel do
          table.remove(messages, #messages)
       end
@@ -287,7 +289,7 @@ function describe_tile(tile)
             end
          end
       end
-    else
-        message(tcod.color.grey, 'Out of sight.')
-     end
+   else
+      message(C.grey, 'Out of sight.')
+   end
 end

@@ -70,7 +70,7 @@ function executeCommand(key)
    local cmd = getCommand(key)
    if type(cmd) == 'table' then
       return command[cmd[1]](unpack(cmd[2]))
-   else if type(command) == 'string' then
+   elseif type(cmd) == 'string' then
       return command[cmd]()
    end
 end
