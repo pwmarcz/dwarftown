@@ -4,8 +4,6 @@ require 'mapgen'
 require 'util'
 require 'dice'
 
-local Room = mapgen.Room
-
 local CELL_W, CELL_H = 4, 3
 
 function makeTetrominoRooms()
@@ -18,7 +16,7 @@ function makeTetrominoRooms()
 
       local rooms = {}
       for i = 1, n do
-         rooms[i] = Room:make()
+         rooms[i] = mapgen.Room:make()
       end
 
       for i, line in ipairs(util.split(s,'|')) do
@@ -55,7 +53,7 @@ end
 function makeTetrisDungeon(w, h)
    -- w, h - dimensions (in tetromino cells)
    local rooms = makeTetrominoRooms()
-   local dungeon = Room:make()
+   local dungeon = mapgen.Room:make()
    for _ = 1, 1000 do
       local i = dice.roll {1, w, -1}
       local j = dice.roll {1, h, -1}
@@ -71,5 +69,5 @@ function makeTetrisDungeon(w, h)
 end
 
 function test()
-   makeTetrisDungeon(16, 8):print()
+   makeTetrisDungeon(12, 6):print()
 end

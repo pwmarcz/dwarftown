@@ -53,7 +53,8 @@ function Room:addWalls()
          if not self:getS(x, y) then
             for x1 = x-1, x+1 do
                for y1 = y-1, y+1 do
-                  if self:getS(x1, y1) == '.' then
+                  local c = self:getS(x1, y1)
+                  if c and c ~= '#' then
                      self:setS(x, y, '#')
                   end
                end
@@ -153,11 +154,43 @@ function Room:connect(makeDoors)
    self:addWalls()
 end
 
+function Room:floodConnect(room2)
+   room2 = room2 or Room:make {w = self.w, h = self.h}
+   for x = 1, self.w-1 do
+      for y = 1, self.h-1 do
+         local c1 = self:getS(x, y)
+         local c2 = room2:getS(x, y)
+         if c1 == '.' and not c2 then
+            self:floodFill(room2, x, y)
+            table.insert(self.points, {x, y})
+         end
+      end
+   end
+   --print('Found ' .. #self.points .. ' components')
+   dice.shuffle(self.points)
+   self:connect()
+end
+
+function Room:floodFill(room2, x, y)
+   if room2:getS(x, y) or self:getS(x, y) ~= '.' then
+      return
+   else
+      room2:setS(x, y, '*')
+      self:floodFill(room2, x+1, y)
+      self:floodFill(room2, x-1, y)
+      self:floodFill(room2, x, y+1)
+      self:floodFill(room2, x, y-1)
+   end
+end
+
 function Room:walkCost(x, y)
+   if x == 0 or x == self.w or y == 0 or y == self.h then
+      -- we don't want to step outside the boundaries
+      return 0
+   end
    local c = self:getS(x, y) or ' '
    return ({['.'] = 1,
             ['+'] = 1,
-            ['#'] = 100,
-            [' '] = 10})[c] or 0
+            ['#'] = 35,
+            [' '] = 20})[c] or 0
 end
-

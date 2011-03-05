@@ -29,3 +29,11 @@ end
 function choice(tbl)
    return tbl[gen:getInt(1, #tbl)]
 end
+
+-- Fisher-Yates shuffle
+function shuffle(tbl)
+   for i = #tbl, 2, -1 do
+      local j = gen:getInt(1, i)
+      tbl[j], tbl[i] = tbl[i], tbl[j]
+   end
+end
