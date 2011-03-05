@@ -41,6 +41,11 @@ translate(getmetatable(libtcodlua)[".get"], tcod,
            "^TCOD_(.+)",
            "(.+)"},
           true)
+          
+function tcod.console.getRoot()
+    return libtcodlua.TCODConsole_root
+end
+
 --[[
 function _alpha(alpha)
 	return tcod.Alpha + math.floor(alpha*255)*(2^8)

@@ -1,6 +1,6 @@
-package.path = package.path .. ';wrapper/?.lua'
+package.path = package.path .. ';src/?.lua;wrapper/?.lua'
 
-require 'tcod'
+require 'game'
 
-tcod.console.initRoot(80,50,'test', false, tcod.RENDERER_SDL)
-tcod.console.credits()
+game.init()
+game.mainLoop()
