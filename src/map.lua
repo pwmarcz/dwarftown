@@ -33,17 +33,17 @@ function init()
    lamp:computeLight(1,2)
 end
 
-function addMonster(monst)
+function addMob(monst)
    monsters[monst] = true
 end
 
-function removeMonster(monst)
+function removeMob(monst)
    monsters[monst] = nil
 end
 
-function act()
+function tick()
    for monst, _ in pairs(monsters) do
-      monst:act()
+      monst:tick()
    end
 end
 

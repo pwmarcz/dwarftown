@@ -27,7 +27,16 @@ Weapon = Item:subclass {
    slot = 'weapon',
 }
 
-Sword = Item:subclass {
+function Weapon.get:descr()
+   return ('%s (%s)'):format(
+      Item.get.descr(self),
+      dice.describe(self.attackDice))
+end
+
+Sword = Weapon:subclass {
    glyph = {'(', C.lightGrey},
    name = 'sword',
+
+   attackDice = {1, 6, 0},
 }
+

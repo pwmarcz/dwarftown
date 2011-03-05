@@ -22,7 +22,7 @@ local keybindings = {
    [{'g', ','}] = 'pickUp',
    [{'d'}] = 'drop',
    [{'u', 'i'}] = 'inventory',
-   [{';'}] = 'look',
+   [{'x', ';'}] = 'look',
    [{'q', K.ESCAPE}] = 'quit',
 }
 
@@ -40,7 +40,6 @@ function init()
 
    gobbo = mob.Goblin:make()
    gobbo:putAt(5, 5)
-   map.addMonster(gobbo)
 
    sword = item.Sword:make()
    map.get(7, 7):putItem(sword)
@@ -57,7 +56,7 @@ function mainLoop()
       local key = tcod.console.waitForKeypress(true)
       if executeCommand(key) then
          turn = turn + 1
-         map.act()
+         map.tick()
       end
       if player.dead then
          ui.prompt({K.ENTER, K.KPENTER}, '[Game over. Press ENTER]')
@@ -131,6 +130,9 @@ end
 
 function command.inventory()
    local item = ui.promptItems(player.items, 'Use:')
+   if item then
+      return player:use(item)
+   end
 end
 
 function command.look()

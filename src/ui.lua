@@ -77,7 +77,7 @@ end
 -- ui.prompt({K.ENTER, K.KPENTER}, '[Game over. Press ENTER]')
 function prompt(keys, ...)
    message(...)
-   blitConsoles()
+   update()
    newTurn()
    while true do
       local key = tcod.console.waitForKeypress(true)
@@ -100,11 +100,15 @@ function promptItems(items, ...)
 
    local letter = string.byte('a')
    for i, item in ipairs(items) do
-      local s = string.format(' %c   %s', letter+i-1, item.descr)
+      local c = ' '
+      if item.equipped then
+         c = '*'
+      end
+      local s = string.format('%s %c   %s', c, letter+i-1, item.descr)
       itemConsole:print(0, i+1, s)
 
       local char, color = glyph(item.glyph)
-      itemConsole:putCharEx(3, i+1, char, color,
+      itemConsole:putCharEx(4, i+1, char, color,
                             tcod.color.black)
    end
 
@@ -132,6 +136,7 @@ function drawStatus(player)
       {''},
       {'Level %d', player.level},
       {'HP: %d/%d', player.hp, player.maxHp},
+      {'Attack: %s', dice.describe(player.attackDice)},
    }
 
    statusConsole:clear()

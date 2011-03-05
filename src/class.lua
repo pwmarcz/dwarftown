@@ -20,7 +20,7 @@ function Object:subclass(c)
    c = c or {}
    c.super = self
 
-   c.get = {}
+   c.get = c.get or {}
 
    for k, v in pairs(self) do
       c[k] = c[k] or v

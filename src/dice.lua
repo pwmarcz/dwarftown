@@ -14,7 +14,7 @@ function roll(d)
    return n
 end
 
-function format(d)
+function describe(d)
    local a, b, c = unpack(d)
 
    s = a .. 'd' .. b

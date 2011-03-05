@@ -1,5 +1,29 @@
 module('util', package.seeall)
 
+dirs = {
+   {-1,-1}, {-1,0}, {-1,1},
+   {0,-1}, {0,1},
+   {1,-1}, {1,0}, {1,1}
+}
+
+function randomDir()
+   return unpack(dice.choice(dirs))
+end
+
+function dirTowards(x1, y1, x2, y2)
+   return sign(x2-x1), sign(y2-y1)
+end
+
+function sign(x)
+   if x > 0 then
+      return 1
+   elseif x < 0 then
+      return -1
+   else
+      return 0
+   end
+end
+
 function descr_a(s)
    local c = s:sub(1,1)
    if c:match('%u') then
