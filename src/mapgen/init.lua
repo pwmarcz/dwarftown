@@ -1,5 +1,6 @@
 module('mapgen', package.seeall)
 
+require 'tcod'
 require 'class'
 require 'dice'
 
@@ -11,6 +12,11 @@ Room = class.Object:subclass {
    w = 0,
    h = 0,
 }
+
+function Room:init()
+   -- points to connect using pathfinding
+   self.points = {}
+end
 
 function Room:getS(x, y)
    return self[BIG_W*y+x]
@@ -88,7 +94,24 @@ function Room:canPlaceIn(room2, x, y, ignoreWalls)
    return true
 end
 
+function Room:findPoint()
+   for x = 0, self.w-1 do
+      for y = 0, self.h-1 do
+         if self:getS(x, y) == '.' then
+            return x, y
+         end
+      end
+   end
+end
+
 function Room:placeIn(room2, x, y)
+   if #self.points == 0 then
+      local xp, yp = self:findPoint()
+      self.points[1] = {xp, yp}
+   end
+   for _, p in ipairs(self.points) do
+      table.insert(room2.points, {p[1]+x, p[2]+y})
+   end
    for x1 = 0, self.w-1 do
       for y1 = 0, self.h-1 do
          local c = self:getS(x1, y1)
@@ -99,69 +122,42 @@ function Room:placeIn(room2, x, y)
    end
 end
 
-local CELL_W, CELL_H = 4, 3
+-- connect all room.points
+function Room:connect(makeDoors)
+   local callback = tcod.path.Callback(
+      function(_, _, x, y) return self:walkCost(x, y) end)
 
-function makeTetrominoRooms()
-   local function make(n, w, h, s)
-      -- n = how many rooms (symmetry)
-      -- w, h = dimensions
-      -- s = configuration
+   local path = tcod.Path(self.w, self.h, callback, nil, 0)
 
-      local W, H = CELL_W, CELL_H
+   while #self.points > 1 do
+      local x1, y1 = unpack(self.points[#self.points])
+      local x2, y2 = unpack(self.points[#self.points-1])
+      --print(self:getS(x1, y1), self:getS(x2, y2), x1, y1, x2, y2)
 
-      local rooms = {}
-      for i = 1, n do
-         rooms[i] = Room:make()
-      end
-
-      for i, line in ipairs(util.split(s,'|')) do
-         for j = 1, line:len() do
-            if line:sub(j, j) == '*' then
-               rooms[1]:setRect(1+(j-1)*W, 1+(i-1)*H, W-1, H-1, '.')
-               if n > 1 then
-                  rooms[2]:setRect(1+(h-i)*W, 1+(j-1)*H, W-1, H-1, '.')
-               end
-               if n > 2 then
-                  rooms[3]:setRect(1+(i-1)*W, 1+(w-j)*H, W-1, H-1, '.')
-                  rooms[4]:setRect(1+(w-j)*W, 1+(h-i)*H, W-1, H-1, '.')
-               end
-            end
+      table.remove(self.points)
+      path:compute(x1, y1, x2, y2)
+      local n = path:size()
+      for i = 0, n-1 do
+         local x, y = path:get(i)
+         local c = self:getS(x, y) or ' '
+         if c == '+' then
+            -- pass
+         elseif c == '#' and makeDoors then
+            c = '+'
+         else
+            c = '.'
          end
-      end
-      for _, r in ipairs(rooms) do
-         r:addWalls()
-         r:tearDownWalls()
-      end
-      return rooms
-   end
-   return util.flatten {
-      make(2,4,1,'****'),
-      make(1,2,2,'**|**'),
-      make(4,3,2,'  *|***'),
-      make(4,3,2,'*  |***'),
-      make(4,3,2,' * |***'),
-      make(4,3,2,'** | **'),
-      make(4,3,2,' **|** '),
-   }
-end
-
-function makeTetrisDungeon(w, h)
-   -- w, h - dimensions (in tetromino cells)
-   local rooms = makeTetrominoRooms()
-   local dungeon = Room:make()
-   for _ = 1, 1000 do
-      local i = dice.roll {1, w, -1}
-      local j = dice.roll {1, h, -1}
-      local room = dice.choice(rooms)
-      local x, y = i*CELL_W, j*CELL_H
-      if room:canPlaceIn(dungeon, x, y, true) then
-         room:placeIn(dungeon, x, y)
-         --dungeon:print()
+         self:setS(x, y, c)
       end
    end
-   return dungeon
+   self:addWalls()
 end
 
-function test()
-   makeTetrisDungeon(16, 8):print()
+function Room:walkCost(x, y)
+   local c = self:getS(x, y) or ' '
+   return ({['.'] = 1,
+            ['+'] = 1,
+            ['#'] = 100,
+            [' '] = 10})[c] or 0
 end
+
