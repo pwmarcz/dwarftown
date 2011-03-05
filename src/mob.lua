@@ -34,11 +34,16 @@ function Mob:walk(dx, dy)
    self:putAt(x+dx, y+dy)
 end
 
-
 Player = Mob:subclass {
    glyph = {'@', C.white},
+
    fovRadiusLight = 20,
    fovRadiusDark = 3,
+
+   level = 1,
+   exp = 0,
+   hp = 10,
+   maxHp = 10,
 }
 
 function Player:putAt(x, y)

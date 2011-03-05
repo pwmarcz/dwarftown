@@ -37,8 +37,9 @@ end
 
 function mainLoop()
    while not done do
-      ui.drawMap()
-      tcod.console.flush()
+      ui.message('Welcome to Dwarftown!')
+      ui.update(player)
+      ui.newTurn()
       local key = tcod.console.waitForKeypress(true)
       executeCommand(key)
    end

@@ -3,15 +3,118 @@ module('ui', package.seeall)
 require 'tcod'
 require 'map'
 
-WIDTH = 80
-HEIGHT = 25
+SCREEN_W = 80
+SCREEN_H = 25
+
+VIEW_W = 48
+VIEW_H = 23
+
+STATUS_W = 30
+STATUS_H = 10
+
+MESSAGES_W = 30
+MESSAGES_H = 6
+
+local viewConsole
+local messagesConsole
+local rootConsole
+local statusConsole
+
+local messages
 
 function init()
    tcod.console.setCustomFont(
       'fonts/terminal10x18.png', tcod.FONT_LAYOUT_ASCII_INROW)
    tcod.console.initRoot(
-      WIDTH, HEIGHT, 'Dwarftown', false, tcod.RENDERER_SDL)
+      SCREEN_W, SCREEN_H, 'Dwarftown', false, tcod.RENDERER_SDL)
    rootConsole = tcod.console.getRoot()
+   viewConsole = tcod.Console(VIEW_W, VIEW_H)
+   messagesConsole = tcod.Console(MESSAGES_W, MESSAGES_H)
+   statusConsole = tcod.Console(STATUS_W, STATUS_H)
+
+   messages = {}
+end
+
+function update(player)
+   rootConsole:clear()
+   drawMap(player.x, player.y)
+   drawMessages()
+   drawStatus(player)
+   tcod.console.blit(
+      viewConsole, 0, 0, VIEW_W, VIEW_H,
+      rootConsole, 1, 1)
+   tcod.console.blit(
+      statusConsole, 0, 0, STATUS_W, STATUS_H,
+      rootConsole, 1+VIEW_W+1, 1)
+   tcod.console.blit(
+      messagesConsole, 0, 0, MESSAGES_W, MESSAGES_H,
+      rootConsole, 1+VIEW_W+1, 1+STATUS_H+1)
+   tcod.console.flush()
+end
+
+function message(text, color)
+   local msg = {
+      text = text,
+      color = color or tcod.color.white,
+      new = true
+   }
+   table.insert(messages, msg)
+end
+
+function newTurn()
+   local i = #messages
+   while i > 0 and messages[i].new do
+      messages[i].new = false
+      i = i - 1
+   end
+end
+
+function drawStatus(player)
+   local lines = {
+      'L' .. player.level,
+      '',
+      string.format('HP: %d/%d', player.hp, player.maxHp),
+   }
+
+   statusConsole:setDefaultForeground(tcod.color.lightGrey)
+   for i, text in ipairs(lines) do
+      statusConsole:printEx(
+         0, i-1, tcod.BKGND_NONE, tcod.LEFT, text)
+   end
+end
+
+function drawMessages()
+   messagesConsole:clear()
+   local n = math.min(#messages, MESSAGES_H)
+   for i = 1, n do
+      local msg = messages[#messages-n+i]
+      local color = msg.color
+      if not msg.new then
+         color = color * 0.6
+      end
+      messagesConsole:setDefaultForeground(color)
+      messagesConsole:printEx(
+         0, i-1, tcod.BKGND_NONE, tcod.LEFT, msg.text)
+   end
+end
+
+function drawMap(xPos, yPos)
+   xc = math.floor(VIEW_W/2)
+   yc = math.floor(VIEW_H/2)
+   viewConsole:clear()
+   for xv = 0, VIEW_W-1 do
+      for yv = 0, VIEW_H-1 do
+         local x = xv - xc + xPos
+         local y = yv - yc + yPos
+         local tile = map.get(x, y)
+         local char, color
+         if tile then
+            local char, color = tileAppearance(tile)
+            viewConsole:putCharEx(xv, yv, char, color,
+                                  tcod.color.black)
+         end
+      end
+   end
 end
 
 function glyph(g)
@@ -19,6 +122,7 @@ function glyph(g)
    local color = g[2] or tcod.color.pink
    return char, color
 end
+
 
 function tileAppearance(tile)
    local char, color
@@ -40,17 +144,3 @@ function tileAppearance(tile)
    return char, color
 end
 
-function drawMap()
-   rootConsole:clear()
-   for x = 0, WIDTH-1 do
-      for y = 0, HEIGHT-1 do
-         local tile = map.get(x, y)
-         local char, color
-         if tile then
-            local char, color = tileAppearance(tile)
-            rootConsole:putCharEx(x, y, char, color,
-                                  tcod.color.black)
-         end
-      end
-   end
-end
