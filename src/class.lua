@@ -1,9 +1,18 @@
 module('class', package.seeall)
 
-Object = {}
+Object = {get = {}}
 
 function Object:makeMetatable()
-   mt = {__index = self}
+   mt = {
+      __index = function(o, name)
+                   getter = self.get[name]
+                   if getter then
+                      return getter(o)
+                   else
+                      return self[name]
+                   end
+                end
+   }
    return mt
 end
 
@@ -11,8 +20,14 @@ function Object:subclass(c)
    c = c or {}
    c.super = self
 
+   c.get = {}
+
    for k, v in pairs(self) do
       c[k] = c[k] or v
+   end
+
+   for k, v in pairs(self.get) do
+      c.get[k] = c.get[k] or v
    end
 
    c.metatable = c:makeMetatable()
@@ -35,3 +50,11 @@ function Object:initialize(o)
       self.super:initialize(o)
    end
 end
+
+Foo = Object:subclass()
+
+function Foo.get:bar()
+   print "BAR BAR BAR"
+   return 42
+end
+

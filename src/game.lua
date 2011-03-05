@@ -5,6 +5,7 @@ require 'tcod'
 require 'ui'
 require 'map'
 require 'mob'
+require 'item'
 
 local K = tcod.k
 
@@ -22,9 +23,9 @@ local keybindings = {
 }
 
 player = nil
+turn = 0
 local command = {}
 local done = false
-local playerActed
 
 function init()
    ui.init()
@@ -37,6 +38,10 @@ function init()
    gobbo:putAt(5, 5)
    map.addMonster(gobbo)
 
+   sword = item.Sword:make()
+   map.get(7, 7):putItem(sword)
+
+   turn = 0
    done = false
 end
 
@@ -46,9 +51,8 @@ function mainLoop()
       ui.update()
       ui.newTurn()
       local key = tcod.console.waitForKeypress(true)
-      playerActed = false
-      executeCommand(key)
-      if playerActed then
+      if executeCommand(key) then
+         turn = turn + 1
          map.act()
       end
       if player.dead then
@@ -58,6 +62,7 @@ function mainLoop()
    end
 end
 
+-- Returns true if player spent a turn
 function executeCommand(key)
    for keys, cmd in pairs(keybindings) do
       for _, k in ipairs(keys) do
@@ -65,11 +70,10 @@ function executeCommand(key)
           (type(k) == 'number' and key.vk == k)) then
 
             if type(cmd) == 'table' then
-               command[cmd[1]](unpack(cmd[2]))
+               return command[cmd[1]](unpack(cmd[2]))
             else
-               command[cmd]()
+               return command[cmd]()
             end
-            return
          end
       end
    end
@@ -78,10 +82,10 @@ end
 function command.walk(dx, dy)
    if player:canAttack(dx, dy) then
       player:attack(dx, dy)
-      playerActed = true
+      return true
    elseif player:canWalk(dx, dy) then
       player:walk(dx, dy)
-      playerActed = true
+      return true
    end
 end
 

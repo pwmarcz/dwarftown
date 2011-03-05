@@ -4,6 +4,7 @@ require 'class'
 require 'tcod'
 require 'map'
 require 'dice'
+require 'util'
 
 local C = tcod.color
 
@@ -69,6 +70,7 @@ Player = Mob:subclass {
 function Player:putAt(x, y)
    map.computeFov(x, y, self.fovRadiusLight, self.fovRadiusDark)
    Mob.putAt(self, x, y)
+   map.get(x, y):onPlayerEnter()
 end
 
 function Player:remove()
@@ -85,7 +87,7 @@ function Player:receiveDamage(damage, from)
 end
 
 function Player:onHit(mob, damage)
-   ui.message('You hit the %s.', mob.name)
+   ui.message('You hit %s.', mob.descr_the)
 end
 
 function Player:die()
@@ -97,7 +99,7 @@ Monster = Mob:subclass()
 function Monster:receiveDamage(damage, from)
    self.hp = self.hp - damage
    if self.hp < 0 then
-      ui.message('The %s is killed!', self.name)
+      ui.message('%s is killed!', self.descr_the)
       self:die()
    end
 end
@@ -109,7 +111,7 @@ end
 
 function Monster:onHit(mob, damage)
    if mob.isPlayer then
-      ui.message('The %s hits you.', self.name)
+      ui.message('%s hits you.', self.descr_the)
    end
 end
 
@@ -127,6 +129,15 @@ function Monster:act()
       self:walk(dx, dy)
    end
 end
+
+function Monster.get:descr()
+   return self.name
+end
+
+function Monster.get:descr_the()
+   return util.descr_the(self.descr)
+end
+
 
 Goblin = Monster:subclass {
    glyph = {'g', C.lighterBlue},

@@ -3,6 +3,7 @@ module('ui', package.seeall)
 require 'tcod'
 require 'map'
 require 'game'
+require 'util'
 
 SCREEN_W = 80
 SCREEN_H = 25
@@ -64,6 +65,7 @@ function message(a, ...)
       msg.text = string.format(...)
       msg.color = a
    end
+   msg.text = util.capitalize(msg.text)
 
    table.insert(messages, msg)
    ui.update()
@@ -93,16 +95,17 @@ end
 
 function drawStatus(player)
    local lines = {
-      'L' .. player.level,
-      '',
-      string.format('HP: %d/%d', player.hp, player.maxHp),
+      {'Turn %d', game.turn},
+      {''},
+      {'Level %d', player.level},
+      {'HP: %d/%d', player.hp, player.maxHp},
    }
 
    statusConsole:clear()
    statusConsole:setDefaultForeground(tcod.color.lightGrey)
-   for i, text in ipairs(lines) do
+   for i, msg in ipairs(lines) do
       statusConsole:printEx(
-         0, i-1, tcod.BKGND_NONE, tcod.LEFT, text)
+         0, i-1, tcod.BKGND_NONE, tcod.LEFT, string.format(unpack(msg)))
    end
 end
 
@@ -157,9 +160,9 @@ function tileAppearance(tile)
    else
       char, color = glyph(tile.memGlyph)
       if tile.memLight == 0 then
-         color = color * 0.3
+         color = color * 0.4
       else
-         color = color * 0.5
+         color = color * 0.6
       end
    end
 

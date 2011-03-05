@@ -132,7 +132,11 @@ Tile = class.Object:subclass {
 
 -- tile glyph, sans mob
 function Tile:getTileGlyph()
-   return self.glyph
+   if self.items then
+      return self.items[#self.items].glyph
+   else
+      return self.glyph
+   end
 end
 
 function Tile:getSeenGlyph()
@@ -140,6 +144,34 @@ function Tile:getSeenGlyph()
       return self.mob.glyph
    else
       return self:getTileGlyph()
+   end
+end
+
+function Tile:putItem(item)
+   self.items = self.items or {}
+   table.insert(self.items, item)
+end
+
+function Tile:removeItem(item)
+   for i, it in ipairs(self.items) do
+      if it == item then
+         table.remove(self.items, i)
+         if #self.items == 0 then
+            self.items = nil
+         end
+         return
+      end
+   end
+   assert(false, 'item not found')
+end
+
+function Tile:onPlayerEnter()
+   if self.items then
+      if #self.items == 1 then
+         ui.message('%s is lying here.', self.items[1].descr_a)
+      else
+         ui.message('Several items are lying here.')
+      end
    end
 end
 
