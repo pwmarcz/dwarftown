@@ -22,6 +22,7 @@ local keybindings = {
    [{'g', ','}] = 'pickUp',
    [{'d'}] = 'drop',
    [{'u', 'i'}] = 'inventory',
+   [{';'}] = 'look',
    [{'q', K.ESCAPE}] = 'quit',
 }
 
@@ -67,16 +68,20 @@ end
 
 -- Returns true if player spent a turn
 function executeCommand(key)
+   local cmd = getCommand(key)
+   if type(cmd) == 'table' then
+      return command[cmd[1]](unpack(cmd[2]))
+   else
+      return command[cmd]()
+   end
+end
+
+function getCommand(key)
    for keys, cmd in pairs(keybindings) do
       for _, k in ipairs(keys) do
          if ((type(k) == 'string' and key.c == k) or
           (type(k) == 'number' and key.vk == k)) then
-
-            if type(cmd) == 'table' then
-               return command[cmd[1]](unpack(cmd[2]))
-            else
-               return command[cmd]()
-            end
+            return cmd
          end
       end
    end
@@ -126,4 +131,8 @@ end
 
 function command.inventory()
    local item = ui.promptItems(player.items, 'Use:')
+end
+
+function command.look()
+   ui.look()
 end

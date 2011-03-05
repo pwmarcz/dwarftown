@@ -15,7 +15,7 @@ STATUS_W = 30
 STATUS_H = 10
 
 MESSAGES_W = 30
-MESSAGES_H = 6
+MESSAGES_H = 10
 
 local viewConsole
 local messagesConsole
@@ -42,6 +42,10 @@ function update()
    drawMap(game.player.x, game.player.y)
    drawMessages()
    drawStatus(game.player)
+   blitConsoles()
+end
+
+function blitConsoles()
    tcod.console.blit(
       viewConsole, 0, 0, VIEW_W, VIEW_H,
       rootConsole, 1, 1)
@@ -66,14 +70,14 @@ function message(a, ...)
       msg.color = a
    end
    msg.text = util.capitalize(msg.text)
-
    table.insert(messages, msg)
-   ui.update()
+   drawMessages()
 end
 
 -- ui.prompt({K.ENTER, K.KPENTER}, '[Game over. Press ENTER]')
 function prompt(keys, ...)
    message(...)
+   blitConsoles()
    newTurn()
    while true do
       local key = tcod.console.waitForKeypress(true)
@@ -90,16 +94,14 @@ function promptItems(items, ...)
    local text = string.format(...)
    itemConsole = tcod.Console(VIEW_W, #items + 2)
    itemConsole:setDefaultForeground(tcod.color.white)
-   itemConsole:printEx(
-      0, 0, tcod.BKGND_NONE, tcod.LEFT, text)
+   itemConsole:print(0, 0, text)
 
    itemConsole:setDefaultForeground(tcod.color.lightGrey)
 
    local letter = string.byte('a')
    for i, item in ipairs(items) do
       local s = string.format(' %c   %s', letter+i-1, item.descr)
-      itemConsole:printEx(
-         0, i+1, tcod.BKGND_NONE, tcod.LEFT, s)
+      itemConsole:print(0, i+1, s)
 
       local char, color = glyph(item.glyph)
       itemConsole:putCharEx(3, i+1, char, color,
@@ -135,29 +137,52 @@ function drawStatus(player)
    statusConsole:clear()
    statusConsole:setDefaultForeground(tcod.color.lightGrey)
    for i, msg in ipairs(lines) do
-      statusConsole:printEx(
-         0, i-1, tcod.BKGND_NONE, tcod.LEFT, string.format(unpack(msg)))
+      statusConsole:print(0, i-1, string.format(unpack(msg)))
    end
 end
 
 function drawMessages()
    messagesConsole:clear()
-   local n = math.min(#messages, MESSAGES_H)
-   for i = 1, n do
-      local msg = messages[#messages-n+i]
+
+   local y = MESSAGES_H
+   local i = #messages
+
+   while y > 0 and i > 0 do
+      local msg = messages[i]
+
       local color = msg.color
       if not msg.new then
          color = color * 0.6
       end
+
       messagesConsole:setDefaultForeground(color)
-      messagesConsole:printEx(
-         0, i-1, tcod.BKGND_NONE, tcod.LEFT, msg.text)
+      local lines = splitMessage(msg.text, MESSAGES_W)
+      for i, line in ipairs(lines) do
+         local y1 = y - #lines + i - 1
+         if y1 >= 0 then
+            messagesConsole:print(0, y1, line)
+         end
+      end
+      y = y - #lines
+      i = i - 1
    end
 end
 
+function splitMessage(text, n)
+   local lines = {}
+   for w in text:gmatch('[^ ]+') do
+      if #lines > 0 and w:len() + lines[#lines]:len() + 1 <= n then
+         lines[#lines] = lines[#lines] .. ' ' .. w
+      else
+         table.insert(lines, w)
+      end
+   end
+   return lines
+end
+
 function drawMap(xPos, yPos)
-   xc = math.floor(VIEW_W/2)
-   yc = math.floor(VIEW_H/2)
+   local xc = math.floor(VIEW_W/2)
+   local yc = math.floor(VIEW_H/2)
    viewConsole:clear()
    for xv = 0, VIEW_W-1 do
       for yv = 0, VIEW_H-1 do
@@ -200,3 +225,64 @@ function tileAppearance(tile)
    return char, color
 end
 
+function look()
+   local xc = math.floor(VIEW_W/2)
+   local yc = math.floor(VIEW_H/2)
+   local xv, yv = xc, yc
+   ui.message('Look mode: use movement keys to look, any other key to exit.')
+   local messagesLevel = #messages
+   while true do
+
+      -- Draw highlighted character
+      local char = viewConsole:getChar(xv, yv)
+      local color = viewConsole:getCharForeground(xv, yv)
+      if char == string.byte(' ') then
+         color = tcod.color.white
+      end
+
+      viewConsole:putCharEx(xv, yv, char, tcod.color.black, color)
+
+      -- Describe position
+      local x, y = xv - xc + game.player.x, yv - yc + game.player.y
+      describe_tile(map.get(x, y))
+
+      blitConsoles()
+
+      -- Clean up
+      viewConsole:putCharEx(xv, yv, char, color, tcod.color.black)
+      while #messages > messagesLevel do
+         table.remove(messages, #messages)
+      end
+
+      -- Get keyboard input
+      local key = tcod.console.waitForKeypress(true)
+      local cmd = game.getCommand(key)
+      if type(cmd) == 'table' and cmd[1] == 'walk' then
+         local dx, dy = unpack(cmd[2])
+         if 0 <= xv+dx and xv+dx < VIEW_W and 0 <= yv+dy and yv+dy < VIEW_H then
+            xv, yv = xv+dx, yv+dy
+         end
+      elseif cmd == 'quit' then
+         break
+      end
+   end
+   -- Clean up the help message
+   messages[messagesLevel] = nil
+   blitConsoles()
+end
+
+function describe_tile(tile)
+   if tile and tile.visible then
+      message(tile.glyph[2], '%s.', tile.name)
+      if tile.mob then
+         message(tile.mob.glyph[2], '%s.', tile.mob.descr)
+         if tile.items then
+            for _, item in ipairs(tile.items) do
+               message(item.glyph[2], '%s.', item.descr)
+            end
+         end
+      end
+    else
+        message(tcod.color.grey, 'Out of sight.')
+     end
+end

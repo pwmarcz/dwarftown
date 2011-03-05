@@ -59,6 +59,8 @@ end
 Player = Mob:subclass {
    glyph = {'@', C.white},
    isPlayer = true,
+   name = 'you',
+   descr = 'you',
 
    fovRadiusLight = 20,
    fovRadiusDark = 3,

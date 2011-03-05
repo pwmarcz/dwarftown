@@ -20,10 +20,10 @@ function descr_the(s)
    end
 end
 
-function delete(tbl, e)
-   for i, e2 in ipairs(tbl) do
+function delete(t, e)
+   for i, e2 in ipairs(t) do
       if e2 == e then
-         table.remove(tbl, i)
+         table.remove(t, i)
          return
       end
    end

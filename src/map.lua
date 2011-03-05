@@ -62,6 +62,7 @@ function eraseFov(x, y, radius)
          tile.memGlyph = tile:getTileGlyph()
          tile.memLight = tile.light
          tile.visible = false
+         tile.inFov = false
       end
    end
 end
@@ -69,6 +70,7 @@ end
 function computeFov(x, y, radiusLight, radiusDark)
    tcodMap:computeFov(x, y, radiusLight)
    for x1,y1,tile,d in fovRect(x, y, radiusLight) do
+      tile.inFov = true
       if tile.light > 0 then
          tile.visible = true
       else
@@ -124,7 +126,10 @@ Tile = class.Object:subclass {
    transparent = false,
    walkable = false,
 
+   -- visible by player
    visible = false,
+   -- in player's FOV - may be invisible because of darkness
+   inFov = false,
    light = 0,
    memGlyph = {' ', C.black},
    memLight = 0,
@@ -171,10 +176,12 @@ end
 
 Wall = Tile:subclass {
    glyph = {'#', C.grey},
+   name = 'wall',
 }
 
 Floor = Tile:subclass {
    glyph = {'.', C.grey},
+   name = 'floor',
    transparent = true,
    walkable = true,
 }
@@ -189,4 +196,5 @@ end
 
 Lamp = LightSource:subclass {
    glyph = {'^', C.yellow},
+   name = 'lamp',
 }
