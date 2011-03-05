@@ -3,6 +3,7 @@ module('mob', package.seeall)
 require 'class'
 require 'tcod'
 require 'map'
+require 'dice'
 
 local C = tcod.color
 
@@ -10,6 +11,10 @@ Mob = class.Object:subclass {
    glyph = {'?'},
    name = '<mob>',
 }
+
+function Mob:init()
+   self.hp = self.maxHp
+end
 
 function Mob:putAt(x, y)
    assert(not self.x and not self.y)
@@ -25,7 +30,12 @@ end
 
 function Mob:canWalk(dx, dy)
    local tile = map.get(self.x+dx, self.y+dy)
-   return tile and tile.walkable
+   return tile and tile.walkable and not tile.mob
+end
+
+function Mob:canAttack(dx, dy)
+   local tile = map.get(self.x+dx, self.y+dy)
+   return tile and tile.mob
 end
 
 function Mob:walk(dx, dy)
@@ -34,8 +44,16 @@ function Mob:walk(dx, dy)
    self:putAt(x+dx, y+dy)
 end
 
+function Mob:attack(dx, dy)
+   local mob = map.get(self.x+dx, self.y+dy).mob
+   local damage = dice.roll(self.attackDice)
+   self:onHit(mob, damage)
+   mob:receiveDamage(damage, self)
+end
+
 Player = Mob:subclass {
    glyph = {'@', C.white},
+   isPlayer = true,
 
    fovRadiusLight = 20,
    fovRadiusDark = 3,
@@ -44,6 +62,8 @@ Player = Mob:subclass {
    exp = 0,
    hp = 10,
    maxHp = 10,
+
+   attackDice = {1,3,1},
 }
 
 function Player:putAt(x, y)
@@ -56,8 +76,63 @@ function Player:remove()
    Mob.remove(self)
 end
 
+function Player:receiveDamage(damage, from)
+   self.hp = self.hp - damage
+   if self.hp < 0 then
+      ui.message(C.red, 'You die...')
+      self:die()
+   end
+end
 
-Goblin = Mob:subclass {
+function Player:onHit(mob, damage)
+   ui.message('You hit the %s.', mob.name)
+end
+
+function Player:die()
+   self.dead = true
+end
+
+Monster = Mob:subclass()
+
+function Monster:receiveDamage(damage, from)
+   self.hp = self.hp - damage
+   if self.hp < 0 then
+      ui.message('The %s is killed!', self.name)
+      self:die()
+   end
+end
+
+function Monster:die()
+   self:remove()
+   map.removeMonster(self)
+end
+
+function Monster:onHit(mob, damage)
+   if mob.isPlayer then
+      ui.message('The %s hits you.', self.name)
+   end
+end
+
+local DIRS = {
+   {-1,-1}, {-1,0}, {-1,1},
+   {0,-1}, {0,1},
+   {1,-1}, {1,0}, {1,1}
+}
+
+function Monster:act()
+   dx, dy = unpack(dice.choice(DIRS))
+   if self:canAttack(dx, dy) then
+      self:attack(dx, dy)
+   elseif self:canWalk(dx, dy) then
+      self:walk(dx, dy)
+   end
+end
+
+Goblin = Monster:subclass {
    glyph = {'g', C.lighterBlue},
    name = 'goblin',
+
+   attackDice = {1,4,1},
+
+   maxHp = 5,
 }

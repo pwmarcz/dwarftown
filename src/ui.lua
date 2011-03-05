@@ -2,6 +2,7 @@ module('ui', package.seeall)
 
 require 'tcod'
 require 'map'
+require 'game'
 
 SCREEN_W = 80
 SCREEN_H = 25
@@ -35,11 +36,11 @@ function init()
    messages = {}
 end
 
-function update(player)
+function update()
    rootConsole:clear()
-   drawMap(player.x, player.y)
+   drawMap(game.player.x, game.player.y)
    drawMessages()
-   drawStatus(player)
+   drawStatus(game.player)
    tcod.console.blit(
       viewConsole, 0, 0, VIEW_W, VIEW_H,
       rootConsole, 1, 1)
@@ -52,13 +53,34 @@ function update(player)
    tcod.console.flush()
 end
 
-function message(text, color)
-   local msg = {
-      text = text,
-      color = color or tcod.color.white,
-      new = true
-   }
+-- ui.message(color, format, ...)
+-- ui.message(format, ...)
+function message(a, ...)
+   local msg = {new = true}
+   if type(a) == 'string' then
+      msg.text = string.format(a, ...)
+      msg.color = tcod.color.white
+   else
+      msg.text = string.format(...)
+      msg.color = a
+   end
+
    table.insert(messages, msg)
+   ui.update()
+end
+
+-- ui.prompt({K.ENTER, K.KPENTER}, '[Game over. Press ENTER]')
+function prompt(keys, ...)
+   message(...)
+   ui.newTurn()
+   while true do
+      local key = tcod.console.waitForKeypress(true)
+      for _, k in ipairs(keys) do
+         if k == key.c or k == key.vk then
+            return k
+         end
+      end
+   end
 end
 
 function newTurn()
@@ -76,6 +98,7 @@ function drawStatus(player)
       string.format('HP: %d/%d', player.hp, player.maxHp),
    }
 
+   statusConsole:clear()
    statusConsole:setDefaultForeground(tcod.color.lightGrey)
    for i, text in ipairs(lines) do
       statusConsole:printEx(
@@ -122,7 +145,6 @@ function glyph(g)
    local color = g[2] or tcod.color.pink
    return char, color
 end
-
 
 function tileAppearance(tile)
    local char, color

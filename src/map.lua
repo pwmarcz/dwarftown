@@ -8,12 +8,14 @@ local C = tcod.color
 WIDTH = 800
 HEIGHT = 400
 
-local tiles = {}
-local tcodMap = nil
+local tiles
+local tcodMap
+local monsters
 
 function init()
    tiles = {}
    tcodMap = tcod.Map(WIDTH, HEIGHT)
+   monsters = {}
 
    for x = 1, 40 do
       for y = 1, 20 do
@@ -29,6 +31,20 @@ function init()
    local lamp = Lamp:make()
    set(1,2,lamp)
    lamp:computeLight(1,2)
+end
+
+function addMonster(monst)
+   monsters[monst] = true
+end
+
+function removeMonster(monst)
+   monsters[monst] = nil
+end
+
+function act()
+   for monst, _ in pairs(monsters) do
+      monst:act()
+   end
 end
 
 function get(x, y)

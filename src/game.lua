@@ -24,6 +24,7 @@ local keybindings = {
 player = nil
 local command = {}
 local done = false
+local playerActed
 
 function init()
    ui.init()
@@ -32,16 +33,28 @@ function init()
    player = mob.Player:make()
    player:putAt(3, 3)
 
+   gobbo = mob.Goblin:make()
+   gobbo:putAt(5, 5)
+   map.addMonster(gobbo)
+
    done = false
 end
 
 function mainLoop()
+   ui.message('Welcome to Dwarftown!')
    while not done do
-      ui.message('Welcome to Dwarftown!')
-      ui.update(player)
+      ui.update()
       ui.newTurn()
       local key = tcod.console.waitForKeypress(true)
+      playerActed = false
       executeCommand(key)
+      if playerActed then
+         map.act()
+      end
+      if player.dead then
+         ui.prompt({K.ENTER, K.KPENTER}, '[Game over. Press ENTER]')
+         done = true
+      end
    end
 end
 
@@ -63,13 +76,19 @@ function executeCommand(key)
 end
 
 function command.walk(dx, dy)
-   if player:canWalk(dx, dy) then
+   if player:canAttack(dx, dy) then
+      player:attack(dx, dy)
+      playerActed = true
+   elseif player:canWalk(dx, dy) then
       player:walk(dx, dy)
+      playerActed = true
    end
 end
 
 function command.quit()
-   done = true
+   if ui.prompt({'y', 'n'}, 'Quit? [yn]') == 'y' then
+      done = true
+   end
 end
 
 function command.wait()
