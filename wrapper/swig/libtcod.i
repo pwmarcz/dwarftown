@@ -218,9 +218,50 @@ bool TCODLine::step(int *xCur, int *yCur);
 %rename(NoisePerlin) TCOD_NOISE_PERLIN;
 %rename(NoiseWavelet) TCOD_NOISE_WAVEVLET;
 #endif
+
+#if SWIGLUA
+%include <typemaps.i>
+%extend TCODNoise {
+    /* Lua typechecking is screwed - when I make an overloaded function, the
+    typechecker kicks in and doesn't let our table argument through... -- hmp */
+    %apply (float *INPUT, int) { (float *f, int n) };
+    float get(float *f, int n)
+    {
+        return $self->get(f);
+    }
+    float getEx(float *f, int n, TCOD_noise_type_t typ)
+    {
+        return $self->get(f, typ);
+    }
+
+    float getFbm(float *f, int n, float octaves)
+    {
+        return $self->getFbm(f, octaves);
+    }
+    float getFbmEx(float *f, int n, float octaves, TCOD_noise_type_t typ)
+    {
+        return $self->getFbm(f, octaves, typ);
+    }
+
+    float getTurbulence(float *f, int n, float octaves)
+    {
+        return $self->getTurbulence(f, octaves);
+    }
+
+    float getTurbulenceEx(float *f, int n, float octaves, TCOD_noise_type_t typ)
+    {
+        return $self->getTurbulence(f, octaves, typ);
+    }
+}
+%ignore TCODNoise::get(float *f, TCOD_noise_type_t typ=TCOD_NOISE_DEFAULT);
+%ignore TCODNoise::getFbm(float *f, float octaves, TCOD_noise_type_t typ=TCOD_NOISE_DEFAULT);
+%ignore TCODNoise::getTurbulence(float *f, float octaves, TCOD_noise_type_t typ=TCOD_NOISE_DEFAULT);
+
+#else
 float TCODNoise::get(float *f, TCOD_noise_type_t typ=TCOD_NOISE_DEFAULT);
 float TCODNoise::getFbm(float *f, float octaves, TCOD_noise_type_t typ=TCOD_NOISE_DEFAULT);
 float TCODNoise::getTurbulence(float *f, float octaves, TCOD_noise_type_t typ=TCOD_NOISE_DEFAULT);
+#endif
 
 // path.hpp
 // Swig is too stupid to handle an INOUT and OUTPUT %apply with the same name. So reproduce the entire class...sigh

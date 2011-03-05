@@ -9,6 +9,8 @@ To use it, you need to have
 
 Then just "require 'tcod'". Look into api.txt for a list of library names, and of course read the libtcod documentation. Most functions also give helpful SWIG-generated messages when called with wrong parameters.
 
+CALLBACKS
+
 Callback support for tcod.line and tcod.path is experimental. To use it, you have to create a tcod.path.Callback / tcod.line.Listener from your function:
   
   local listener = tcod.line.Listener(function(x,y) ... end)
