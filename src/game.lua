@@ -19,7 +19,10 @@ local keybindings = {
    [{'b', '1'}] = {'walk', {-1, 1}},
    [{'j', '2', K.DOWN}] = {'walk', {0, 1}},
    [{'n', '3'}] = {'walk', {1, 1}},
-   [{'q'}] = 'quit',
+   [{'g', ','}] = 'pickUp',
+   [{'d'}] = 'drop',
+   [{'u', 'i'}] = 'inventory',
+   [{'q', K.ESCAPE}] = 'quit',
 }
 
 player = nil
@@ -96,5 +99,31 @@ function command.quit()
 end
 
 function command.wait()
-   -- ...
+   return true
+end
+
+function command.pickUp()
+   local items = player.tile.items
+   if items then
+      if #items == 1 then
+         return player:pickUp(items[1])
+      end
+      local item = ui.promptItems(player.tile.items, 'Pick up:')
+      if item then
+         return player:pickUp(item)
+      end
+   else
+      ui.message('There is nothing here.')
+   end
+end
+
+function command.drop()
+   local item = ui.promptItems(player.items, 'Drop:')
+   if item then
+      return player:drop(item)
+   end
+end
+
+function command.inventory()
+   local item = ui.promptItems(player.items, 'Use:')
 end

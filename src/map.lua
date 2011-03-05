@@ -153,16 +153,10 @@ function Tile:putItem(item)
 end
 
 function Tile:removeItem(item)
-   for i, it in ipairs(self.items) do
-      if it == item then
-         table.remove(self.items, i)
-         if #self.items == 0 then
-            self.items = nil
-         end
-         return
-      end
+   util.delete(self.items, item)
+   if #self.items == 0 then
+      self.items = nil
    end
-   assert(false, 'item not found')
 end
 
 function Tile:onPlayerEnter()

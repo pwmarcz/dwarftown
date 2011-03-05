@@ -17,15 +17,19 @@ function Mob:init()
    self.hp = self.maxHp
 end
 
+function Mob.get:tile()
+   assert(self.x and self.y)
+   return map.get(self.x, self.y)
+end
+
 function Mob:putAt(x, y)
    assert(not self.x and not self.y)
    self.x, self.y = x, y
-   map.get(x, y).mob = self
+   self.tile.mob = self
 end
 
 function Mob:remove()
-   assert(self.x and self.y)
-   map.get(self.x, self.y).mob = nil
+   self.tile.mob = nil
    self.x, self.y = nil, nil
 end
 
@@ -65,7 +69,13 @@ Player = Mob:subclass {
    maxHp = 10,
 
    attackDice = {1,3,1},
+
+   maxItems = 10,
 }
+
+function Player:init()
+   self.items = {}
+end
 
 function Player:putAt(x, y)
    map.computeFov(x, y, self.fovRadiusLight, self.fovRadiusDark)
@@ -84,6 +94,24 @@ function Player:receiveDamage(damage, from)
       ui.message(C.red, 'You die...')
       self:die()
    end
+end
+
+function Player:pickUp(item)
+   if #self.items > self.maxItems then
+      ui.message('Your backpack is full!')
+   else
+      ui.message('You pick up %s.', item.descr_a)
+      self.tile:removeItem(item)
+      table.insert(self.items, item)
+      return true
+   end
+end
+
+function Player:drop(item)
+   ui.message('You drop %s.', item.descr_the)
+   util.delete(self.items, item)
+   self.tile:putItem(item)
+   return true
 end
 
 function Player:onHit(mob, damage)

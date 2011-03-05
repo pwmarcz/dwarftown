@@ -74,7 +74,7 @@ end
 -- ui.prompt({K.ENTER, K.KPENTER}, '[Game over. Press ENTER]')
 function prompt(keys, ...)
    message(...)
-   ui.newTurn()
+   newTurn()
    while true do
       local key = tcod.console.waitForKeypress(true)
       for _, k in ipairs(keys) do
@@ -82,6 +82,37 @@ function prompt(keys, ...)
             return k
          end
       end
+   end
+end
+
+function promptItems(items, ...)
+   update()
+   local text = string.format(...)
+   itemConsole = tcod.Console(VIEW_W, #items + 2)
+   itemConsole:setDefaultForeground(tcod.color.white)
+   itemConsole:printEx(
+      0, 0, tcod.BKGND_NONE, tcod.LEFT, text)
+
+   itemConsole:setDefaultForeground(tcod.color.lightGrey)
+
+   local letter = string.byte('a')
+   for i, item in ipairs(items) do
+      local s = string.format(' %c   %s', letter+i-1, item.descr)
+      itemConsole:printEx(
+         0, i+1, tcod.BKGND_NONE, tcod.LEFT, s)
+
+      local char, color = glyph(item.glyph)
+      itemConsole:putCharEx(3, i+1, char, color,
+                            tcod.color.black)
+   end
+
+   tcod.console.blit(itemConsole, 0, 0, VIEW_W, #items + 2,
+             rootConsole, 1, 1)
+   tcod.console.flush()
+   local key = tcod.console.waitForKeypress(true)
+   local i = string.byte(key.c) - letter + 1
+   if items[i] then
+      return items[i]
    end
 end
 

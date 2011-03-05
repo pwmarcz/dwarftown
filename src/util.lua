@@ -20,6 +20,16 @@ function descr_the(s)
    end
 end
 
+function delete(tbl, e)
+   for i, e2 in ipairs(tbl) do
+      if e2 == e then
+         table.remove(tbl, i)
+         return
+      end
+   end
+   assert(false, 'element not found')
+end
+
 function capitalize(s)
    return s:sub(1,1):upper() .. s:sub(2)
 end
