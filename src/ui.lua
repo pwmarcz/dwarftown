@@ -177,7 +177,7 @@ end
 
 function splitMessage(text, n)
    local lines = {}
-   for w in text:gmatch('[^ ]+') do
+   for _, w in ipairs(util.split(text, ' ')) do
       if #lines > 0 and w:len() + lines[#lines]:len() + 1 <= n then
          lines[#lines] = lines[#lines] .. ' ' .. w
       else
@@ -236,7 +236,12 @@ function look()
    local xc = math.floor(VIEW_W/2)
    local yc = math.floor(VIEW_H/2)
    local xv, yv = xc, yc
+
+   local savedMessages = messages
+   messages = {}
+
    ui.message('Look mode: use movement keys to look, any other key to exit.')
+   ui.message('')
    local messagesLevel = #messages
    while true do
 
@@ -273,8 +278,8 @@ function look()
          break
       end
    end
-   -- Clean up the help message
-   messages[messagesLevel] = nil
+
+   messages = savedMessages
    blitConsoles()
 end
 

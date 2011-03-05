@@ -50,11 +50,3 @@ function Object:initialize(o)
       self.super:initialize(o)
    end
 end
-
-Foo = Object:subclass()
-
-function Foo.get:bar()
-   print "BAR BAR BAR"
-   return 42
-end
-

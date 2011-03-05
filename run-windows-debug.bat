@@ -1,2 +1,2 @@
 @echo off
-wrapper\windows\lua.exe src\main.lua
+wrapper\windows\lua.exe src\main.lua %1

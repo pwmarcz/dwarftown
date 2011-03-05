@@ -57,3 +57,38 @@ end
 function capitalize(s)
    return s:sub(1,1):upper() .. s:sub(2)
 end
+
+function split(s, pat)
+   local i = 1
+   result = {}
+   while true do
+      a, b = s:find(pat, i)
+      if a then
+         table.insert(result, s:sub(i, a-1))
+         i = b+1
+      else
+         table.insert(result, s:sub(i))
+         break
+      end
+   end
+   return result
+end
+
+function map(f, t)
+   result = {}
+   for _, v in ipairs(t) do
+      table.insert(t, f(v))
+   end
+   return result
+end
+
+function flatten(ts)
+   result = {}
+   for _, t in ipairs(ts) do
+      for _, v in ipairs(t) do
+         table.insert(result, v)
+      end
+   end
+   return result
+end
+
