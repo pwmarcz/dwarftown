@@ -34,6 +34,24 @@ function choice(tbl)
    return tbl[gen:getInt(1, #tbl)]
 end
 
+function choiceLevel(tbl, level)
+   local n = 0
+   for _, v in ipairs(tbl) do
+      if not level or v.level <= level then
+         n = n + 1
+      end
+   end
+   n = getInt(1, n)
+   for _, v in ipairs(tbl) do
+      if not level or v.level <= level then
+         n = n - 1
+         if n == 0 then
+            return v
+         end
+      end
+   end
+end
+
 -- Fisher-Yates shuffle
 function shuffle(tbl)
    for i = #tbl, 2, -1 do

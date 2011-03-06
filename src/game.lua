@@ -50,10 +50,12 @@ function init()
 
    turn = 0
    done = false
+   leaving = false
 end
 
 function mainLoop()
-   ui.message('Welcome to Dwarftown!')
+   ui.message('Find Dwarftown!')
+   ui.message('Press ? for help.')
    while not done do
       ui.update()
       ui.newTurn()
@@ -65,6 +67,8 @@ function mainLoop()
       if player.dead then
          ui.prompt({K.ENTER, K.KPENTER}, C.red,
                    '[Game over. Press ENTER]')
+         done = true
+      elseif player.leaving then
          done = true
       end
    end
@@ -93,14 +97,11 @@ end
 
 function command.walk(dx, dy)
    if player:canAttack(dx, dy) then
-      player:attack(dx, dy)
-      return true
+      return player:attack(dx, dy)
    elseif player:canWalk(dx, dy) then
-      player:walk(dx, dy)
-      return true
+      return player:walk(dx, dy)
    elseif player:canDig(dx, dy) then
-      player:dig(dx, dy)
-      return true
+      return player:dig(dx, dy)
    end
 end
 

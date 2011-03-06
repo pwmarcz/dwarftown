@@ -92,3 +92,18 @@ function flatten(ts)
    return result
 end
 
+function addRegister(cls)
+   cls.all = {}
+   local subclass = cls.subclass
+   function cls:subclass(o)
+      local exclude = o.exclude
+      o.exclude = nil
+      o = subclass(self, o)
+      if exclude then
+         o.exclude = true
+      else
+         table.insert(cls.all, o)
+      end
+      return o
+   end
+end

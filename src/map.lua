@@ -6,7 +6,7 @@ require 'tcod'
 local C = tcod.color
 
 WIDTH = 80
-HEIGHT = 100
+HEIGHT = 200
 
 local tiles
 local tcodMap
@@ -285,7 +285,7 @@ Tree = Floor:subclass {
 
 LightSource = Tile:subclass {
    type = '^',
-   lightRadius = 6,
+   lightRadius = 10,
    light = 1,
 }
 
@@ -294,6 +294,6 @@ function LightSource:computeLight(x, y)
 end
 
 Lamp = LightSource:subclass {
-   glyph = {'^', C.yellow},
+   glyph = {'*', C.yellow},
    name = 'lamp',
 }

@@ -7,9 +7,13 @@ require 'util'
 local C = tcod.color
 
 Item = class.Object:subclass {
+   exclude = true,
    glyph = {'?'},
    name = '<item>',
+   level = 1,
 }
+
+util.addRegister(Item)
 
 function Item._get:descr()
    return self.name
@@ -24,6 +28,7 @@ function Item._get:descr_the()
 end
 
 LightSource = Item:subclass {
+   exclude = true,
    slot = 'light',
 }
 
@@ -53,9 +58,19 @@ Torch = LightSource:subclass {
    name = 'torch',
    lightRadius = 7,
    turns = 30,
+
+   level = 2,
+}
+
+EmptyBottle = Item:subclass {
+   glyph = {'!', C.grey},
+   name = 'empty bottle',
+
+   level = 1,
 }
 
 Weapon = Item:subclass {
+   exclude = true,
    slot = 'weapon',
 }
 
@@ -65,19 +80,38 @@ function Weapon._get:descr()
       dice.describe(self.attackDice))
 end
 
-
 Sword = Weapon:subclass {
    glyph = {'(', C.lightGrey},
    name = 'sword',
 
    attackDice = {1, 6, 0},
+   level = 2,
+}
+
+Dagger = Weapon:subclass {
+   glyph = {'(', C.lightGrey},
+   name = 'dagger',
+
+   attackDice = {1, 4, 1},
+   level = 1,
+}
+
+BrokenDagger = Weapon:subclass {
+   glyph = {'(', C.lightGrey},
+   name = 'broken dagger',
+
+   attackDice = {1, 2, 1},
+   level = 1,
 }
 
 PickAxe = Weapon:subclass {
+   exclude = true,
    glyph = {'{', C.lightGrey},
    name = 'pick-axe',
 
    attackDice = {1, 4, 2},
+
+   level = 3,
 }
 
 function PickAxe:onEquip(player)
@@ -102,6 +136,7 @@ end
 
 Armor = Item:subclass {
    armor = 0,
+   exclude = true
 }
 
 function Armor._get:descr()
@@ -120,5 +155,9 @@ end
 
 Helmet = Armor:subclass {
    armor = 1,
+   glyph = {'[', C.grey},
+   name = 'helmet',
    slot = 'helmet',
+
+   level = 1,
 }

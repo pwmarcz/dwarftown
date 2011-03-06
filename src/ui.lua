@@ -98,15 +98,16 @@ function promptItems(items, ...)
    itemConsole:setDefaultForeground(C.white)
    itemConsole:print(0, 0, text)
 
-   itemConsole:setDefaultForeground(C.lightGrey)
-
    local letter = string.byte('a')
    for i, item in ipairs(items) do
-      local c = ' '
+      local s
       if item.equipped then
-         c = '*'
+         itemConsole:setDefaultForeground(C.white)
+         s = ('%c *   %s'):format(letter+i-1, item.descr)
+      else
+         itemConsole:setDefaultForeground(C.lightGrey)
+         s = ('%c     %s'):format(letter+i-1, item.descr)
       end
-      local s = string.format('%s %c   %s', c, letter+i-1, item.descr)
       itemConsole:print(0, i+1, s)
 
       local char, color = glyph(item.glyph)
@@ -138,8 +139,9 @@ function drawStatus(player)
       {''},
       {'Turn     %d', game.turn},
       {''},
-      {'Level    %d', player.level},
+      {'Level    %d (%d/%d)', player.level, player.exp, player.maxExp},
       {'HP       %d/%d', player.hp, player.maxHp},
+      {'Armor    %d', player.armor},
       {'Attack   %s', dice.describe(player.attackDice)},
    }
 
@@ -289,10 +291,10 @@ function describeTile(tile)
       message(tile.glyph[2], '%s.', tile.name)
       if tile.mob then
          message(tile.mob.glyph[2], '%s.', tile.mob.descr)
-         if tile.items then
-            for _, item in ipairs(tile.items) do
-               message(item.glyph[2], '%s.', item.descr)
-            end
+      end
+      if tile.items then
+         for _, item in ipairs(tile.items) do
+            message(item.glyph[2], '%s.', item.descr)
          end
       end
    else

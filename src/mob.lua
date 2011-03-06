@@ -54,6 +54,7 @@ function Mob:walk(dx, dy)
    local x, y = self.x, self.y
    self:remove()
    self:putAt(x+dx, y+dy)
+   return true
 end
 
 function Mob:tick()
@@ -76,6 +77,7 @@ function Mob:attack(dx, dy)
    damage = math.max(0, damage - mob.armor)
    self:onAttack(mob, damage)
    mob:receiveDamage(damage, self)
+   return true
 end
 
 Player = Mob:subclass {
@@ -146,6 +148,27 @@ function Player:dig(dx, dy)
    self:recalcFov()
    ui.message('You dig.')
    self:onDig(dx, dy)
+   return true
+end
+
+function Player:attack(dx, dy)
+   local m = map.get(self.x+dx, self.y+dy).mob
+   if not m.hostile then
+      if ui.prompt({'y', 'n'}, C.green, 'Attack %s? [yn]', m.descr_the) == 'n' then
+         return
+      end
+   end
+   return Mob.attack(self, dx, dy)
+end
+
+function Player:walk(dx, dy)
+   if map.get(self.x+dx, self.y+dy).exit then
+      if ui.prompt({'y', 'n'}, C.green, 'Leave? [yn]') == 'y' then
+         self.leaving = true
+      end
+   else
+      return Mob.walk(self, dx, dy)
+   end
 end
 
 function Player:tick()
@@ -157,6 +180,7 @@ function Player:tick()
          self:destroyFromSlot('light')
       end
    end
+   Mob.tick(self)
 end
 
 function Player:destroyFromSlot(slot)
@@ -280,6 +304,10 @@ function Monster:receiveDamage(damage, from)
       if from.isPlayer then
          from:addExp(self.level)
       end
+   else
+      if from.isPlayer and not self.hostile then
+         self.hostile = true
+      end
    end
 end
 
@@ -300,7 +328,7 @@ end
 function Monster:tick()
    Mob.tick(self)
 
-   if self:canSeePlayer() then
+   if self.hostile and self:canSeePlayer() then
       dx, dy = util.dirTowards(
          self.x, self.y, game.player.x, game.player.y)
    else
@@ -308,7 +336,8 @@ function Monster:tick()
       dx, dy = util.randomDir()
    end
 
-   if self.x+dx == game.player.x and
+   if self.hostile and
+      self.x+dx == game.player.x and
       self.y+dy == game.player.y
    then
       self:attack(dx, dy)
@@ -340,10 +369,32 @@ Rat = Monster:subclass {
 }
 
 GiantRat = Rat:subclass {
-   glyph = {'g', C.lighterBlue},
-   name = 'goblin',
+   glyph = {'R', C.darkOrange},
+   name = 'giant rat',
 
    attackDice = {1,4,1},
 
    maxHp = 7,
+}
+
+Bear = Monster:subclass {
+   glyph = {'B', C.darkOrange},
+   name = 'bear',
+
+   attackDice = {1,8,1},
+
+   maxHp = 20,
+   level = 3,
+   hostile = false,
+}
+
+Squirrel = Monster:subclass {
+   glyph = {'q', C.orange},
+   name = 'squirrel',
+
+   attackDice = {1,2,0},
+
+   maxHp = 3,
+   level = 0,
+   hostile = false,
 }

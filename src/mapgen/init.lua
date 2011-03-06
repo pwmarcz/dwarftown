@@ -3,6 +3,8 @@ module('mapgen', package.seeall)
 require 'tcod'
 require 'class'
 require 'dice'
+require 'item'
+require 'map'
 
 local BIG_W = 65536
 
@@ -149,6 +151,19 @@ function Room:placeOnMap(x, y)
          end
       end
    end
+   for x1 = x, x+self.w-1 do
+      for y1 = y, y+self.h-1 do
+         tile = map.get(x1, y1)
+         if tile.lightRadius then
+            tile:computeLight(x1, y1)
+         end
+         if tile.mob then
+            local m = tile.mob
+            tile.mob = nil
+            m:putAt(x1, y1)
+         end
+      end
+   end
 end
 
 -- connect all room.points
@@ -182,13 +197,22 @@ function Room:connect(points, makeDoors)
 end
 
 function Room:floodConnect(...)
+   for x = 1, self.w-1 do
+      for y = 1, self.h-1 do
+         local tile = self:get(x, y)
+         if tile.accessible then
+            tile.accessible = false
+         end
+      end
+   end
+
    local points = {}
    for x = 1, self.w-1 do
       for y = 1, self.h-1 do
          local tile = self:get(x, y)
          if tile.type == '.' and not tile.accessible then
-            self:floodFill(x, y)
-            table.insert(points, {x, y})
+            local all = self:floodFill(x, y)
+            table.insert(points, dice.choice(all))
          end
       end
    end
@@ -197,16 +221,27 @@ function Room:floodConnect(...)
    self:connect(points, ...)
 end
 
+-- Flood-fills the dungeon, returns all points
 function Room:floodFill(x, y)
-   local tile = self:get(x, y)
-   if tile.type == '.' and not tile.accessible then
-      tile.accessible = true
+   local p = {x, y}
+   local stack = {p}
+   local all = {}
 
-      self:floodFill(x+1, y)
-      self:floodFill(x-1, y)
-      self:floodFill(x, y+1)
-      self:floodFill(x, y-1)
+   while #stack > 0 do
+      local p = table.remove(stack)
+      local x, y = unpack(p)
+      local tile = self:get(x, y)
+      if tile.type == '.' and not tile.accessible then
+         table.insert(all, p)
+         tile.accessible = true
+
+         table.insert(stack, {x+1, y})
+         table.insert(stack, {x-1, y})
+         table.insert(stack, {x, y+1})
+         table.insert(stack, {x, y-1})
+      end
    end
+   return all
 end
 
 function Room:walkCost(x, y)
@@ -219,4 +254,35 @@ function Room:walkCost(x, y)
             ['+'] = 1,
             ['#'] = 35,
             [' '] = 20})[c] or 0
+end
+
+function Room:findEmptyTile(x, y, w, h)
+   if not x then
+      x, y, w, h = 1, 1, self.w-1, self.h-1
+   end
+   while true do
+      local x1 = dice.getInt(x, x+w-1)
+      local y1 = dice.getInt(y, y+h-1)
+      local tile = self:get(x1, y1)
+      if tile.type == '.' and not tile.mob then
+         return x1, y1, tile
+      end
+   end
+end
+
+function Room:addItems(n, level)
+   for _ = 1, n do
+      local x, y, tile = self:findEmptyTile()
+      local it = dice.choiceLevel(item.Item.all, level):make()
+      tile:putItem(it)
+   end
+end
+
+function Room:addMonsters(n, level, tbl)
+   tbl = tbl or mob.Monster.all
+   for _ = 1, n do
+      local x, y, tile = self:findEmptyTile()
+      local m = dice.choiceLevel(tbl, level):make()
+      tile.mob = m
+   end
 end

@@ -23,7 +23,9 @@ function Object:subclass(c)
    c._get = c._get or {}
 
    for k, v in pairs(self) do
-      c[k] = c[k] or v
+      if c[k] == nil then
+         c[k] = v
+      end
    end
 
    for k, v in pairs(self._get) do
