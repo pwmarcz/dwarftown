@@ -59,8 +59,6 @@ end
 function eraseFov(x, y, radius)
    for _,_,tile in rect(x, y, radius) do
       if tile.visible then
-         tile.memGlyph = tile:getTileGlyph()
-         tile.memLight = tile.light
          tile.visible = false
          tile.inFov = false
       end
@@ -71,10 +69,16 @@ function computeFov(x, y, radiusLight, radiusDark)
    tcodMap:computeFov(x, y, radiusLight)
    for x1,y1,tile,d in fovRect(x, y, radiusLight) do
       tile.inFov = true
-      if tile.light > 0 then
+      light = map.getLight(x1, y1, x, y)
+      if light > 0 then
          tile.visible = true
       else
          tile.visible = d <= radiusDark
+      end
+      if tile.visible then
+         tile.seenLight = light
+         tile.memGlyph = tile:getTileGlyph()
+         tile.memLight = light
       end
    end
 end
@@ -82,7 +86,29 @@ end
 function computeLight(x, y, radius, a)
    tcodMap:computeFov(x, y, radius)
    for _, _, tile, d in fovRect(x,y,radius) do
-      tile.light = tile.light + a
+      if tile.transparent then
+         tile.light = tile.light + a
+      end
+   end
+end
+
+-- Checks if a tile is lit.
+function map.getLight(x, y, px, py)
+   tile = get(x, y)
+   if tile.transparent then
+      return tile.light
+   else
+      -- A wall is lit when we have LOS to any adjacent tile that is lit.
+      local light = 0
+      dx, dy = math.abs(px-x), math.abs(py-y)
+      for dx1 = -1, 1 do
+         for dy1 = -1, 1 do
+            if tcodMap:isInFov(x+dx1, y+dy1) then
+               light = math.max(light, get(x+dx1, y+dy1).light)
+            end
+         end
+      end
+      return light
    end
 end
 
@@ -125,12 +151,18 @@ Tile = class.Object:subclass {
    glyph = {'?'},
    transparent = false,
    walkable = false,
+   -- Tile type is #, ., + (for map generator)
+   type = '?',
 
    -- visible by player
    visible = false,
    -- in player's FOV - may be invisible because of darkness
    inFov = false,
+
+   -- light and seenLight are different for walls,
+   -- because wall can be lit from one side and not from another
    light = 0,
+   seenLight = 0,
    memGlyph = {' ', C.black},
    memLight = 0,
 }
@@ -174,19 +206,56 @@ function Tile:onPlayerEnter()
    end
 end
 
+Empty = Tile:subclass {
+   glyph = {' ', C.black},
+   type = ' ',
+   name = '<empty>',
+}
+
 Wall = Tile:subclass {
-   glyph = {'#', C.grey},
+   glyph = {'#', C.darkOrange},
+   type = '#',
    name = 'wall',
+}
+
+Stone = Tile:subclass {
+   glyph = {'#', C.grey},
+   type = '#',
+   name = 'stone',
+}
+
+
+Door = Tile:subclass {
+   glyph = {'+', C.brown},
+   type = '+',
+   name = 'door',
 }
 
 Floor = Tile:subclass {
    glyph = {'.', C.grey},
+   type = '.',
    name = 'floor',
    transparent = true,
    walkable = true,
 }
 
+Grass = Floor:subclass {
+   glyph = {'.', C.lightGreen},
+   name = 'grass',
+}
+
+TallTree = Wall:subclass {
+   glyph = {'#', C.darkerGreen},
+   name = 'tall tree',
+}
+
+Tree = Floor:subclass {
+   glyph = {'&', C.darkGreen},
+   name = 'tree',
+}
+
 LightSource = Tile:subclass {
+   type = '#',
    lightRadius = 6,
 }
 

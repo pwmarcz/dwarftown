@@ -217,7 +217,7 @@ function tileAppearance(tile)
 
    if tile.visible then
       char, color = glyph(tile:getSeenGlyph())
-      if tile.light == 0 then
+      if tile.seenLight == 0 then
          color = color * 0.75
       end
    else
@@ -225,7 +225,7 @@ function tileAppearance(tile)
       if tile.memLight == 0 then
          color = color * 0.4
       else
-         color = color * 0.6
+         color = color * 0.5
       end
    end
 

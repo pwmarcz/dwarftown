@@ -36,7 +36,7 @@ end
 
 function Object:make(o)
    o = o or {}
-   --o.class = self
+   o.class = self
    setmetatable(o, self.metatable)
    self:initialize(o)
    return o

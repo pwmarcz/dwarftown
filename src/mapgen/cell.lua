@@ -11,13 +11,16 @@ require 'tcod'
 require 'dice'
 
 function cellStep(room, cutoff1, cutoff2)
-   local room2 = mapgen.Room:make { w = room.w, h = room.h }
+   local room2 = mapgen.Room:make {
+      w = room.w, h = room.h,
+      wall = room.wall, floor = room.floor
+   }
    for x = 1, room.w-1 do
       for y = 1, room.h-1 do
          local n1, n2 = 0, 0
          for x1 = x-2, x+2 do
             for y1 = y-2, y+2 do
-               if room:get(x1, y1) ~= '.' then
+               if room:get(x1, y1).type ~= '.' then
                   if math.abs(x1-x) < 2 and math.abs(y1-y) < 2 then
                      n1 = n1 + 1
                   else
@@ -27,7 +30,7 @@ function cellStep(room, cutoff1, cutoff2)
             end
          end
          if n1 < cutoff1 and n2 >= cutoff2 then
-            room2:set(x, y, '.')
+            room2:set(x, y, room2.floor)
          end
       end
    end
@@ -41,22 +44,29 @@ function repeatCellStep(n, room, ...)
    return room
 end
 
-function makeCellRoom(w, h)
-   local room = mapgen.Room:make { w = w, h = h }
-   for x = 1, w-1 do
-      for y = 1, h-1 do
+function makeCellRoom(room, smooth)
+   for x = 1, room.w-1 do
+      for y = 1, room.h-1 do
          if dice.roll{1, 100, 0} > 40 then
-            room:set(x, y, '.')
+            room:set(x, y, room.floor)
          end
       end
    end
-   room = repeatCellStep(4, room, 5, 5)
-   room = repeatCellStep(1, room, 5, 1)
+   if smooth then
+      room = repeatCellStep(1, room, 5, 5)
+      room = repeatCellStep(3, room, 5, 0)
+   else
+      room = repeatCellStep(4, room, 5, 5)
+      room = repeatCellStep(1, room, 5, 1)
+   end
    room:addWalls()
    room:floodConnect()
    return room
 end
 
 function test()
-   makeCellRoom(70, 40):print()
+   local room = mapgen.Room:make { w = 60, h = 20 }
+   room = makeCellRoom(room, true)
+   --room:addNearWalls('&')
+   room:print()
 end

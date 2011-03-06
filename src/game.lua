@@ -6,6 +6,7 @@ require 'ui'
 require 'map'
 require 'mob'
 require 'item'
+require 'mapgen.world'
 
 local K = tcod.k
 
@@ -35,14 +36,10 @@ function init()
    ui.init()
    map.init()
 
+   local x, y = mapgen.world.createWorld()
+
    player = mob.Player:make()
-   player:putAt(3, 3)
-
-   gobbo = mob.Goblin:make()
-   gobbo:putAt(5, 5)
-
-   sword = item.Sword:make()
-   map.get(7, 7):putItem(sword)
+   player:putAt(x, y)
 
    turn = 0
    done = false

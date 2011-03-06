@@ -22,13 +22,13 @@ function makeTetrominoRooms()
       for i, line in ipairs(util.split(s,'|')) do
          for j = 1, line:len() do
             if line:sub(j, j) == '*' then
-               rooms[1]:setRect(1+(j-1)*W, 1+(i-1)*H, W-1, H-1, '.')
+               rooms[1]:setRect(1+(j-1)*W, 1+(i-1)*H, W-1, H-1, map.Floor)
                if n > 1 then
-                  rooms[2]:setRect(1+(h-i)*W, 1+(j-1)*H, W-1, H-1, '.')
+                  rooms[2]:setRect(1+(h-i)*W, 1+(j-1)*H, W-1, H-1, map.Floor)
                end
                if n > 2 then
-                  rooms[3]:setRect(1+(i-1)*W, 1+(w-j)*H, W-1, H-1, '.')
-                  rooms[4]:setRect(1+(w-j)*W, 1+(h-i)*H, W-1, H-1, '.')
+                  rooms[3]:setRect(1+(i-1)*W, 1+(w-j)*H, W-1, H-1, map.Floor)
+                  rooms[4]:setRect(1+(w-j)*W, 1+(h-i)*H, W-1, H-1, map.Floor)
                end
             end
          end
@@ -36,6 +36,7 @@ function makeTetrominoRooms()
       for _, r in ipairs(rooms) do
          r:addWalls()
          r:tearDownWalls()
+         --r:print()
       end
       return rooms
    end
@@ -64,7 +65,7 @@ function makeTetrisDungeon(w, h)
          --dungeon:print()
       end
    end
-   dungeon:connect(true)
+   dungeon:floodConnect(true)
    return dungeon
 end
 
