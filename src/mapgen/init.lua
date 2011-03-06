@@ -18,11 +18,11 @@ function Room:init()
    self.points = {}
 end
 
-function Room:getS(x, y)
+function Room:get(x, y)
    return self[BIG_W*y+x]
 end
 
-function Room:setS(x, y, s)
+function Room:set(x, y, s)
    self[BIG_W*y+x] = s
    self.w = math.max(self.w, x+1)
    self.h = math.max(self.h, y+1)
@@ -32,7 +32,7 @@ function Room:setRect(x, y, w, h, s)
    --print(x,y,w,h)
    for x1 = x, x+w-1 do
       for y1 = y, y+h-1 do
-         self:setS(x1, y1, s)
+         self:set(x1, y1, s)
       end
    end
 end
@@ -41,7 +41,7 @@ function Room:print()
    for y = 0, self.h-1 do
       s = ''
       for x = 0, self.w-1 do
-         s = s .. (self:getS(x, y) or ' ')
+         s = s .. (self:get(x, y) or ' ')
       end
       print(s)
    end
@@ -50,12 +50,12 @@ end
 function Room:addWalls()
    for x = 0, self.w do
       for y = 0, self.h do
-         if not self:getS(x, y) then
+         if not self:get(x, y) then
             for x1 = x-1, x+1 do
                for y1 = y-1, y+1 do
-                  local c = self:getS(x1, y1)
+                  local c = self:get(x1, y1)
                   if c and c ~= '#' then
-                     self:setS(x, y, '#')
+                     self:set(x, y, '#')
                   end
                end
             end
@@ -68,11 +68,11 @@ end
 function Room:tearDownWalls()
    for x = 1, self.w-1 do
       for y = 1, self.h-1 do
-         if self:getS(x, y) == '#' then
-            if ((self:getS(x-1, y) == '.' and self:getS(x+1, y) == '.') or
-             (self:getS(x, y-1) == '.' and self:getS(x, y+1) == '.'))
+         if self:get(x, y) == '#' then
+            if ((self:get(x-1, y) == '.' and self:get(x+1, y) == '.') or
+             (self:get(x, y-1) == '.' and self:get(x, y+1) == '.'))
             then
-               self:setS(x, y, '.')
+               self:set(x, y, '.')
             end
          end
       end
@@ -83,8 +83,8 @@ end
 function Room:canPlaceIn(room2, x, y, ignoreWalls)
    for x1 = 0, self.w-1 do
       for y1 = 0, self.h-1 do
-         local c1 = self:getS(x1, y1)
-         local c2 = room2:getS(x+x1, y+y1)
+         local c1 = self:get(x1, y1)
+         local c2 = room2:get(x+x1, y+y1)
          if c1 and c2 then
             if not (ignoreWalls and c1 == '#' and c2 == '#') then
                return false
@@ -98,7 +98,7 @@ end
 function Room:findPoint()
    for x = 0, self.w-1 do
       for y = 0, self.h-1 do
-         if self:getS(x, y) == '.' then
+         if self:get(x, y) == '.' then
             return x, y
          end
       end
@@ -115,9 +115,9 @@ function Room:placeIn(room2, x, y)
    end
    for x1 = 0, self.w-1 do
       for y1 = 0, self.h-1 do
-         local c = self:getS(x1, y1)
+         local c = self:get(x1, y1)
          if c then
-            room2:setS(x+x1, y+y1, self:getS(x1, y1))
+            room2:set(x+x1, y+y1, self:get(x1, y1))
          end
       end
    end
@@ -133,14 +133,14 @@ function Room:connect(makeDoors)
    while #self.points > 1 do
       local x1, y1 = unpack(self.points[#self.points])
       local x2, y2 = unpack(self.points[#self.points-1])
-      --print(self:getS(x1, y1), self:getS(x2, y2), x1, y1, x2, y2)
+      --print(self:get(x1, y1), self:get(x2, y2), x1, y1, x2, y2)
 
       table.remove(self.points)
       path:compute(x1, y1, x2, y2)
       local n = path:size()
       for i = 0, n-1 do
          local x, y = path:get(i)
-         local c = self:getS(x, y) or ' '
+         local c = self:get(x, y) or ' '
          if c == '+' then
             -- pass
          elseif c == '#' and makeDoors then
@@ -148,7 +148,7 @@ function Room:connect(makeDoors)
          else
             c = '.'
          end
-         self:setS(x, y, c)
+         self:set(x, y, c)
       end
    end
    self:addWalls()
@@ -158,8 +158,8 @@ function Room:floodConnect(room2)
    room2 = room2 or Room:make {w = self.w, h = self.h}
    for x = 1, self.w-1 do
       for y = 1, self.h-1 do
-         local c1 = self:getS(x, y)
-         local c2 = room2:getS(x, y)
+         local c1 = self:get(x, y)
+         local c2 = room2:get(x, y)
          if c1 == '.' and not c2 then
             self:floodFill(room2, x, y)
             table.insert(self.points, {x, y})
@@ -172,10 +172,10 @@ function Room:floodConnect(room2)
 end
 
 function Room:floodFill(room2, x, y)
-   if room2:getS(x, y) or self:getS(x, y) ~= '.' then
+   if room2:get(x, y) or self:get(x, y) ~= '.' then
       return
    else
-      room2:setS(x, y, '*')
+      room2:set(x, y, '*')
       self:floodFill(room2, x+1, y)
       self:floodFill(room2, x-1, y)
       self:floodFill(room2, x, y+1)
@@ -188,7 +188,7 @@ function Room:walkCost(x, y)
       -- we don't want to step outside the boundaries
       return 0
    end
-   local c = self:getS(x, y) or ' '
+   local c = self:get(x, y) or ' '
    return ({['.'] = 1,
             ['+'] = 1,
             ['#'] = 35,

@@ -17,7 +17,7 @@ function cellStep(room, cutoff1, cutoff2)
          local n1, n2 = 0, 0
          for x1 = x-2, x+2 do
             for y1 = y-2, y+2 do
-               if room:getS(x1, y1) ~= '.' then
+               if room:get(x1, y1) ~= '.' then
                   if math.abs(x1-x) < 2 and math.abs(y1-y) < 2 then
                      n1 = n1 + 1
                   else
@@ -27,7 +27,7 @@ function cellStep(room, cutoff1, cutoff2)
             end
          end
          if n1 < cutoff1 and n2 >= cutoff2 then
-            room2:setS(x, y, '.')
+            room2:set(x, y, '.')
          end
       end
    end
@@ -46,17 +46,17 @@ function makeCellRoom(w, h)
    for x = 1, w-1 do
       for y = 1, h-1 do
          if dice.roll{1, 100, 0} > 40 then
-            room:setS(x, y, '.')
+            room:set(x, y, '.')
          end
       end
    end
    room = repeatCellStep(4, room, 5, 5)
-   room = repeatCellStep(2, room, 5, 1)
+   room = repeatCellStep(1, room, 5, 1)
    room:addWalls()
    room:floodConnect()
    return room
 end
 
 function test()
-   makeCellRoom(50, 50):print()
+   makeCellRoom(70, 40):print()
 end

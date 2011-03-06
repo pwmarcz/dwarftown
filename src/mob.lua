@@ -21,7 +21,7 @@ function Mob:init()
    self.hp = self.maxHp
 end
 
-function Mob.get:tile()
+function Mob._get:tile()
    assert(self.x and self.y)
    return map.get(self.x, self.y)
 end
@@ -102,7 +102,7 @@ function Player:init()
    self.slots = {}
 end
 
-function Player.get:attackDice()
+function Player._get:attackDice()
    local plus = self.level * 2 - 2
    if self.slots.weapon then
       a, b, c = unpack(self.slots.weapon.attackDice)
@@ -247,11 +247,11 @@ function Monster:canSeePlayer()
    return self.tile.inFov
 end
 
-function Monster.get:descr()
+function Monster._get:descr()
    return self.name
 end
 
-function Monster.get:descr_the()
+function Monster._get:descr_the()
    return util.descr_the(self.descr)
 end
 

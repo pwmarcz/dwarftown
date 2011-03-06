@@ -11,15 +11,15 @@ Item = class.Object:subclass {
    name = '<item>',
 }
 
-function Item.get:descr()
+function Item._get:descr()
    return self.name
 end
 
-function Item.get:descr_a()
+function Item._get:descr_a()
    return util.descr_a(self.descr)
 end
 
-function Item.get:descr_the()
+function Item._get:descr_the()
    return util.descr_the(self.descr)
 end
 
@@ -27,9 +27,9 @@ Weapon = Item:subclass {
    slot = 'weapon',
 }
 
-function Weapon.get:descr()
+function Weapon._get:descr()
    return ('%s (%s)'):format(
-      Item.get.descr(self),
+      Item._get.descr(self),
       dice.describe(self.attackDice))
 end
 
@@ -44,9 +44,9 @@ Armor = Item:subclass {
    armor = 0,
 }
 
-function Armor.get:descr()
+function Armor._get:descr()
    return ('%s [+%d]'):format(
-      Item.get.descr(self),
+      Item._get.descr(self),
       self.armor)
 end
 
