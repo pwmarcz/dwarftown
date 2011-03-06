@@ -4,9 +4,9 @@ require 'mapgen'
 require 'util'
 require 'dice'
 
-local CELL_W, CELL_H = 4, 3
+CELL_W, CELL_H = 4, 3
 
-function makeTetrominoRooms()
+function makeTetrominoRooms(wall, floor)
    local function make(n, w, h, s)
       -- n = how many rooms (symmetry)
       -- w, h = dimensions
@@ -16,7 +16,7 @@ function makeTetrominoRooms()
 
       local rooms = {}
       for i = 1, n do
-         rooms[i] = mapgen.Room:make()
+         rooms[i] = mapgen.Room:make{ wall = wall, floor = floor }
       end
 
       for i, line in ipairs(util.split(s,'|')) do
@@ -34,9 +34,10 @@ function makeTetrominoRooms()
          end
       end
       for _, r in ipairs(rooms) do
+         r.wCells = math.floor(r.w / W)
+         r.hCells = math.floor(r.h / H)
          r:addWalls()
          r:tearDownWalls()
-         --r:print()
       end
       return rooms
    end
@@ -51,17 +52,18 @@ function makeTetrominoRooms()
    }
 end
 
-function makeTetrisDungeon(w, h)
-   -- w, h - dimensions (in tetromino cells)
-   local rooms = makeTetrominoRooms()
-   local dungeon = mapgen.Room:make()
+-- w, h - dimensions (in tetromino cells)
+function makeTetrisDungeon(dungeon, wCells, hCells)
+   local rooms = makeTetrominoRooms(dungeon.wall, dungeon.floor)
    for _ = 1, 1000 do
-      local i = dice.getInt(0, w-1)
-      local j = dice.getInt(0, h-1)
       local room = dice.choice(rooms)
+      local i = dice.getInt(0, wCells-1-room.wCells)
+      local j = dice.getInt(0, hCells-1-room.hCells)
       local x, y = i*CELL_W, j*CELL_H
       if room:canPlaceIn(dungeon, x, y, true) then
+         room = room:deepCopy()
          room:placeIn(dungeon, x, y)
+         --print(_)
          --dungeon:print()
       end
    end

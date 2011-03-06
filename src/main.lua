@@ -11,6 +11,9 @@ if args[1] == 'mapgen' then
    mapgen.tetris.test()
    mapgen.cell.test()
 else
+   if args[1] == 'wizard' then
+      game.wizard = true
+   end
    game.init()
    game.mainLoop()
 end

@@ -181,16 +181,18 @@ function Room:connect(points, makeDoors)
       table.remove(points)
       path:compute(x1, y1, x2, y2)
       local n = path:size()
+      local last = '.'
       for i = 0, n-1 do
          local x, y = path:get(i)
          local c = self:get(x, y).type
          if c == '+' or c == '.' then
             -- pass
-         elseif c == '#' and makeDoors then
+         elseif c == '#' and last == '.' and makeDoors then
             self:set(x, y, map.Door)
          else
             self:set(x, y, self.floor)
          end
+         last = c
       end
    end
    self:addWalls()
@@ -210,7 +212,8 @@ function Room:floodConnect(...)
    for x = 1, self.w-1 do
       for y = 1, self.h-1 do
          local tile = self:get(x, y)
-         if tile.type == '.' and not tile.accessible then
+         if (tile.type == '.' or tile.type == '+') and not tile.accessible
+         then
             local all = self:floodFill(x, y)
             table.insert(points, dice.choice(all))
          end
@@ -231,7 +234,7 @@ function Room:floodFill(x, y)
       local p = table.remove(stack)
       local x, y = unpack(p)
       local tile = self:get(x, y)
-      if tile.type == '.' and not tile.accessible then
+      if (tile.type == '.' or tile.type == '+') and not tile.accessible then
          table.insert(all, p)
          tile.accessible = true
 

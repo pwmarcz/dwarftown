@@ -13,7 +13,7 @@ SCREEN_H = 25
 VIEW_W = 48
 VIEW_H = 23
 
-STATUS_W = 30
+STATUS_W = 29
 STATUS_H = 10
 
 MESSAGES_W = 30
@@ -25,6 +25,8 @@ local rootConsole
 local statusConsole
 
 local messages
+
+local ord = string.byte
 
 function init()
    tcod.console.setCustomFont(
@@ -98,7 +100,7 @@ function promptItems(items, ...)
    itemConsole:setDefaultForeground(C.white)
    itemConsole:print(0, 0, text)
 
-   local letter = string.byte('a')
+   local letter = ord('a')
    for i, item in ipairs(items) do
       local s
       if item.equipped then
@@ -119,7 +121,7 @@ function promptItems(items, ...)
              rootConsole, 1, 1)
    tcod.console.flush()
    local key = tcod.console.waitForKeypress(true)
-   local i = string.byte(key.c) - letter + 1
+   local i = ord(key.c) - letter + 1
    if items[i] then
       return items[i]
    end
@@ -134,13 +136,19 @@ function newTurn()
 end
 
 function drawStatus(player)
+   local sector = map.getSector(player.x, player.y)
+   local sectorName
+   if sector then
+      sectorName = sector.name
+   end
    local lines = {
-      {map.sectorName(player.x, player.y) or ''},
+      {sectorName or ''},
       {''},
       {'Turn     %d', game.turn},
       {''},
-      {'Level    %d (%d/%d)', player.level, player.exp, player.maxExp},
+      {''}, -- line 5: health bar
       {'HP       %d/%d', player.hp, player.maxHp},
+      {'Level    %d (%d/%d)', player.level, player.exp, player.maxExp},
       {'Armor    %d', player.armor},
       {'Attack   %s', dice.describe(player.attackDice)},
    }
@@ -150,6 +158,19 @@ function drawStatus(player)
    for i, msg in ipairs(lines) do
       statusConsole:print(0, i-1, string.format(unpack(msg)))
    end
+
+   local y = 4
+   local health = math.ceil((STATUS_W-2) * player.hp / player.maxHp)
+   statusConsole:putCharEx(0, y, ord('['), C.grey, C.black)
+   statusConsole:putCharEx(STATUS_W - 1, y, ord(']'), C.grey, C.black)
+   for i = 1, STATUS_W-2 do
+      if i - 1 < health then
+         statusConsole:putCharEx(i, y, ord('*'), C.white, C.black)
+      else
+         statusConsole:putCharEx(i, y, ord('-'), C.grey, C.black)
+      end
+   end
+
 end
 
 function drawMessages()
@@ -210,7 +231,7 @@ function drawMap(xPos, yPos)
 end
 
 function glyph(g)
-   local char = string.byte(g[1])
+   local char = ord(g[1])
    local color = g[2] or C.pink
    return char, color
 end
@@ -251,7 +272,7 @@ function look()
       -- Draw highlighted character
       local char = viewConsole:getChar(xv, yv)
       local color = viewConsole:getCharForeground(xv, yv)
-      if char == string.byte(' ') then
+      if char == ord(' ') then
          color = C.white
       end
 
@@ -325,7 +346,7 @@ function help()
 end
 
 function screenshot()
-   tcod.system.saveScreenshot()
+   tcod.system.saveScreenshot(nil)
 end
 
 --[[

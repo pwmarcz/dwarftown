@@ -2,26 +2,27 @@ module('mapgen.world', package.seeall)
 
 require 'mapgen'
 require 'mapgen.cell'
+require 'mapgen.tetris'
 require 'dice'
-
-local sectors = {}
 
 local world
 
 -- Makes full game world, returns player x, y
 function createWorld()
    world = mapgen.Room:make {
-      sectorNames = {}
+      sectors = {}
    }
-   Marketplace:place(10, 10, 50, 30)
-   RatCaves:place(10, 50, 50, 30)
-   local forest = Forest:place(10, 90, 50, 60)
+   local sectors = {Marketplace, Graveyard, RatCaves, Forest}
+   for i = 1, #sectors do
+      sectors[i] = sectors[i]:place(10, 35*(i-1), 50, 30)
+   end
+
    --world:addWalls()
    world:floodConnect()
    world:placeOnMap(0, 0)
    world:print()
-   map.sectorNames = world.sectorNames
-   return forest:getStartingPoint()
+   map.sectors = world.sectors
+   return sectors[2]:getStartingPoint()
 end
 
 Sector = class.Object:subclass {
@@ -43,14 +44,19 @@ function Sector:place(x, y, w, h)
          sector.monsters, sector.monstersLevel, sector.monstersCategory)
    end
    sector.room:placeIn(world, x, y)
-   table.insert(world.sectorNames, {x, y, w, h, sector.name})
+   table.insert(world.sectors, sector)
    return sector
+end
+
+function Sector:getStartingPoint()
+   local x, y = self.room:findEmptyTile()
+   return x + self.x, y + self.y
 end
 
 Forest = Sector:subclass {
    name = 'Forest',
    itemsLevel = 0,
-   roadH = 20,
+   roadH = 10,
 
    monsters = 10,
    monstersLevel = false,
@@ -128,10 +134,13 @@ function makeShop(w, h)
       -- put some items
       for x = 1,w do
          for y = 1,h do
-            if dice.getInt(1, 5) == 1 then
+            a = dice.getInt(1, 50)
+            if a < 10 then
                local it = dice.choiceLevel(
                   item.Item.all, 2):make()
                room:get(x, y):putItem(it)
+            elseif a == 50 then
+               room:get(x, y).mob = mob.Mimic:make()
             end
          end
       end
@@ -160,5 +169,31 @@ function Marketplace:init()
          end
       end
    end
+   self.room:floodConnect()
+end
+
+Graveyard = Sector:subclass {
+   name = 'Graveyard',
+}
+
+function Graveyard:init()
+   local CELL_W, CELL_H = mapgen.tetris.CELL_W, mapgen.tetris.CELL_H
+   local wCells = math.floor(self.w/CELL_W)
+   local hCells = math.floor(self.h/CELL_H)
+   self.room = mapgen.Room:make {
+      wall = map.Stone,
+   }
+
+   local mainRoom = mapgen.Room:make {
+      wall = map.MarbleWall,
+   }
+   mainRoom:setRect(1, 1, CELL_W*3-1, CELL_H*3-1, mainRoom.floor)
+   mainRoom:addWalls()
+
+   local wCenter = math.floor(wCells/2-2)
+   local hCenter = math.floor(hCells/2-2)
+   mainRoom:placeIn(self.room, wCenter*CELL_W, hCenter*CELL_H)
+   self.room:print()
+   self.room = mapgen.tetris.makeTetrisDungeon(self.room, wCells, hCells)
    self.room:floodConnect()
 end

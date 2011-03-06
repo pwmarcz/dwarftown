@@ -5,19 +5,19 @@ require 'tcod'
 
 local C = tcod.color
 
-WIDTH = 80
+WIDTH = 70
 HEIGHT = 200
 
 local tiles
 local tcodMap
 local mobs
-sectorNames = nil
+sectors = nil
 
 function init()
    tiles = {}
    tcodMap = tcod.Map(WIDTH, HEIGHT)
    mobs = {}
-   sectorNames = {}
+   sectors = {}
 end
 
 function addMob(m)
@@ -40,13 +40,12 @@ function tick()
    end
 end
 
-function sectorName(x1, y1)
-   for _, sec in ipairs(sectorNames) do
-      x, y, w, h, name = unpack(sec)
-      if x <= x1 and x1 < x+w and
-         y <= y1 and y1 < y+h
+function getSector(x1, y1)
+   for _, sec in ipairs(sectors) do
+      if sec.x <= x1 and x1 < sec.x+sec.w and
+         sec.y <= y1 and y1 < sec.y+sec.h
       then
-         return name
+         return sec
       end
    end
 end
@@ -241,12 +240,19 @@ emptyTile = Empty:make()
 Wall = Tile:subclass {
    glyph = {'#', C.darkerOrange},
    type = '#',
-   name = 'wall',
+   name = 'wooden wall',
+   diggable = true,
+}
+
+MarbleWall = Tile:subclass {
+   glyph = {'#', C.white},
+   type = '#',
+   name = 'marble wall',
    diggable = true,
 }
 
 Stone = Tile:subclass {
-   glyph = {'#', C.grey},
+   glyph = {'#', C.darkGrey},
    type = '#',
    name = 'stone',
    diggable = true,
@@ -254,9 +260,11 @@ Stone = Tile:subclass {
 
 
 Door = Tile:subclass {
-   glyph = {'+', C.brown},
+   glyph = {'^', C.darkerOrange},
    type = '+',
    name = 'door',
+   walkable = true,
+   transparent = true,
 }
 
 Floor = Tile:subclass {

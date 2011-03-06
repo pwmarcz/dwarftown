@@ -11,10 +11,7 @@ require 'tcod'
 require 'dice'
 
 function cellStep(room, cutoff1, cutoff2)
-   local room2 = mapgen.Room:make {
-      w = room.w, h = room.h,
-      wall = room.wall, floor = room.floor
-   }
+   local room2 = room:deepCopy()
    for x = 1, room.w-1 do
       for y = 1, room.h-1 do
          local n1, n2 = 0, 0
@@ -31,6 +28,8 @@ function cellStep(room, cutoff1, cutoff2)
          end
          if n1 < cutoff1 and n2 >= cutoff2 then
             room2:set(x, y, room2.floor)
+         else
+            room2:set(x, y, nil)
          end
       end
    end

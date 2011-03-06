@@ -73,6 +73,9 @@ end
 
 function Mob:attack(dx, dy)
    local mob = map.get(self.x+dx, self.y+dy).mob
+   if mob.dead then
+      return
+   end
    local damage = dice.roll(self.attackDice)
    damage = math.max(0, damage - mob.armor)
    self:onAttack(mob, damage)
@@ -276,7 +279,12 @@ function Player:die()
    self.dead = true
 end
 
-function Player:addExp(a)
+function Player:addExp(level)
+   local a = level
+   if level > self.level then
+      local b = level - self.level
+      a = a + b*(b+1)
+   end
    self.exp = self.exp + a
    while self.exp >= self.maxExp do
       self:advance()
@@ -288,7 +296,8 @@ function Player:advance()
    self.level = self.level + 1
    self:calcStats()
    self.hp = self.maxHp
-   ui.message('Congratulations! You advance to level ', self.level)
+   ui.message(C.yellow,
+              'Congratulations! You advance to level %d.', self.level)
 end
 
 Monster = Mob:subclass {
@@ -359,6 +368,43 @@ function Monster._get:descr_the()
    return util.descr_the(self.descr)
 end
 
+Mimic = Monster:subclass {
+   name = 'mimic',
+
+   attackDice = {1,6,0},
+   maxHp = 10,
+
+   awake = false,
+}
+
+function Mimic:init()
+   self.item = dice.choiceLevel(item.Item.all):make()
+   self.glyph = self.item.glyph
+   self.name = self.item.name
+end
+
+function Mimic:tick()
+   if self.awake then
+      Monster.tick(self)
+   else
+      Mob.tick(self)
+   end
+end
+
+function Mimic:receiveDamage(damage, from)
+   if from.isPlayer and not self.awake then
+      ui.message('It\'s a mimic!')
+      self:wakeUp()
+   end
+   Monster.receiveDamage(self, damage, from)
+end
+
+function Mimic:wakeUp()
+   self.glyph = {'m', self.glyph[2]}
+   self.name = self.class.name
+   self.awake = true
+end
+
 Rat = Monster:subclass {
    glyph = {'r', C.darkOrange},
    name = 'rat',
@@ -368,7 +414,7 @@ Rat = Monster:subclass {
    maxHp = 5,
 }
 
-GiantRat = Rat:subclass {
+GiantRat = Monster:subclass {
    glyph = {'R', C.darkOrange},
    name = 'giant rat',
 

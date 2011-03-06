@@ -33,6 +33,7 @@ local keybindings = {
 
 player = nil
 turn = 0
+wizard = false
 local command = {}
 local done = false
 
@@ -65,9 +66,17 @@ function mainLoop()
          map.tick()
       end
       if player.dead then
-         ui.prompt({K.ENTER, K.KPENTER}, C.red,
-                   '[Game over. Press ENTER]')
-         done = true
+         if game.wizard then
+            if ui.prompt({'y', 'n'}, C.green, 'Die? [yn]') == 'n' then
+               player.hp = player.maxHp
+               player.dead = false
+            end
+         end
+         if player.dead then
+            ui.prompt({K.ENTER, K.KPENTER}, C.red,
+                      '[Game over. Press ENTER]')
+            done = true
+         end
       elseif player.leaving then
          done = true
       end

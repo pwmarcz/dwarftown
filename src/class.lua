@@ -52,3 +52,26 @@ function Object:initialize(o)
       self.super:initialize(o)
    end
 end
+
+function Object:copy()
+   local o = {}
+   for k, v in pairs(self) do
+      o[k] = v
+   end
+   setmetatable(o, getmetatable(self))
+   return o
+end
+
+-- Copies object (not all table!) fields
+function Object:deepCopy()
+   local o = {}
+   for k, v in pairs(self) do
+      if type(v) == 'table' and v.class then
+         o[k] = v:copy()
+      else
+         o[k] = v
+      end
+   end
+   setmetatable(o, getmetatable(self))
+   return o
+end
