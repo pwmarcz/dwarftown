@@ -22,7 +22,7 @@ function createWorld()
    world:placeOnMap(0, 0)
    world:print()
    map.sectors = world.sectors
-   return sectors[2]:getStartingPoint()
+   return sectors[1]:getStartingPoint()
 end
 
 Sector = class.Object:subclass {
@@ -149,7 +149,7 @@ function makeShop(w, h)
 end
 
 Marketplace = Sector:subclass {
-   name = 'Marketplace',
+   name = 'Dwarftown Marketplace',
 }
 
 function Marketplace:init()
@@ -173,7 +173,7 @@ function Marketplace:init()
 end
 
 Graveyard = Sector:subclass {
-   name = 'Graveyard',
+   name = 'Dwarftown Graveyard',
    monsters = 10,
    monstersLevel = false,
    monstersCategory = {mob.Spectre},

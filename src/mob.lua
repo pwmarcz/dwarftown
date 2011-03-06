@@ -183,17 +183,18 @@ function Player:tick()
       light.turnsLeft = light.turnsLeft - 1
       if light.turnsLeft == 0 then
          ui.message('Your %s is extinguished.', light.descr)
-         self:destroyFromSlot('light')
+         self:destroyItem(light)
       end
    end
    Mob.tick(self)
 end
 
-function Player:destroyFromSlot(slot)
-   item = self.slots[slot]
-   item:onUnequip(self)
-   self.slots[slot] = nil
-   util.delete(self.items, item)
+function Player:destroyItem(it)
+   if it.equipped then
+      it:onUnequip(self)
+      self.slots[it.slot] = nil
+   end
+   util.delete(self.items, it)
 end
 
 function Player:putAt(x, y)
@@ -219,7 +220,7 @@ function Player:pickUp(item)
    if #self.items > self.maxItems then
       ui.message('Your backpack is full!')
    else
-      ui.message('You pick up %s.', item.descr_a)
+      ui.message('You pick up %s.', item.descr_the)
       self.tile:removeItem(item)
       table.insert(self.items, item)
       return true
@@ -243,6 +244,11 @@ function Player:use(item)
    elseif item.slot then
       self:equip(item)
       return true
+   elseif item.onUse then
+      item:onUse(self)
+      return true
+   else
+      ui.message('You don\'t know how to use %s.', item.descr_the)
    end
 end
 
@@ -332,7 +338,8 @@ function Monster:onAttack(mob, damage)
       if damage > 0 then
          ui.message('%s hits you.', self.descr_the)
       else
-         ui.message('%s hits you, but your armor protects you.')
+         ui.message('%s hits you, but your armor protects you.',
+                    self.descr_the)
       end
    end
 end

@@ -20,10 +20,11 @@ function main()
    end
 end
 
-function handler()
+function handler(message)
+   s = message .. '\n' .. debug.traceback()
    f = io.open('log.txt', 'w')
-   f:write(debug.traceback())
-   print(debug.traceback())
+   f:write(s)
+   print(s)
    return true
 end
 

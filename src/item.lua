@@ -62,13 +62,6 @@ Torch = LightSource:subclass {
    level = 2,
 }
 
-EmptyBottle = Item:subclass {
-   glyph = {'!', C.grey},
-   name = 'empty bottle',
-
-   level = 1,
-}
-
 Weapon = Item:subclass {
    exclude = true,
    slot = 'weapon',
@@ -130,7 +123,7 @@ end
 function PickAxe:onDig(player, dir)
    if dice.roll{1, 15, 0} == 1 then
       ui.message('Your %s breaks!', self.descr)
-      player:destroyFromSlot('weapon')
+      player:destroyItem(self)
    end
 end
 
@@ -161,3 +154,24 @@ Helmet = Armor:subclass {
 
    level = 1,
 }
+
+EmptyBottle = Item:subclass {
+   glyph = {'!', C.grey},
+   name = 'empty bottle',
+
+   level = 1,
+}
+
+PotionHealth = Item:subclass {
+   glyph = {'!', C.green},
+   name = 'potion of health',
+
+   level = 1,
+}
+
+function PotionHealth:onUse(player)
+   ui.message('You drink %s. You feel healed.', self.descr_the)
+   player.hp = player.hp + math.floor(player.maxHp/2)
+   player.hp = math.min(player.hp, player.maxHp)
+   player:destroyItem(self)
+end
