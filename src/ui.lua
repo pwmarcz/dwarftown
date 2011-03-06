@@ -310,7 +310,7 @@ end
 function describeTile(tile)
    if tile and tile.visible then
       message(tile.glyph[2], '%s.', tile.name)
-      if tile.mob then
+      if tile.mob and tile.mob.visible then
          message(tile.mob.glyph[2], '%s.', tile.mob.descr)
       end
       if tile.items then

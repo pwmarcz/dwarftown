@@ -27,6 +27,10 @@ function Mob._get:tile()
    return map.get(self.x, self.y)
 end
 
+function Mob._get:visible()
+   return self.tile.visible
+end
+
 function Mob:putAt(x, y)
    assert(not self.x and not self.y)
    self.x, self.y = x, y
@@ -361,11 +365,19 @@ function Monster:canSeePlayer()
 end
 
 function Monster._get:descr()
-   return self.name
+   if self.visible then
+      return self.name
+   else
+      return 'something'
+   end
 end
 
 function Monster._get:descr_the()
-   return util.descr_the(self.descr)
+   if self.visible then
+      return util.descr_the(self.descr)
+   else
+      return 'something'
+   end
 end
 
 Mimic = Monster:subclass {
@@ -403,6 +415,20 @@ function Mimic:wakeUp()
    self.glyph = {'m', self.glyph[2]}
    self.name = self.class.name
    self.awake = true
+end
+
+Spectre = Monster:subclass {
+   glyph = {'Z', C.white},
+   name = 'spectre',
+
+   attackDice = {1,5,0},
+   maxHp = 10,
+
+   level = 4,
+}
+
+function Spectre._get:visible()
+   return self.tile.visible and self.tile.light == 0
 end
 
 Rat = Monster:subclass {

@@ -199,7 +199,7 @@ function Tile:getTileGlyph()
 end
 
 function Tile:getSeenGlyph()
-   if self.mob then
+   if self.mob and self.mob.visible then
       return self.mob.glyph
    else
       return self:getTileGlyph()

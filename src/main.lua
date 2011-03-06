@@ -5,15 +5,26 @@ require 'mapgen'
 require 'mapgen.tetris'
 require 'mapgen.cell'
 
-args = {...}
+local args = {...}
 
-if args[1] == 'mapgen' then
-   mapgen.tetris.test()
-   mapgen.cell.test()
-else
-   if args[1] == 'wizard' then
-      game.wizard = true
+function main()
+   if args[1] == 'mapgen' then
+      mapgen.tetris.test()
+      mapgen.cell.test()
+   else
+      if args[1] == 'wizard' then
+         game.wizard = true
+      end
+      game.init()
+      game.mainLoop()
    end
-   game.init()
-   game.mainLoop()
 end
+
+function handler()
+   f = io.open('log.txt', 'w')
+   f:write(debug.traceback())
+   print(debug.traceback())
+   return true
+end
+
+xpcall(main, handler)

@@ -174,6 +174,9 @@ end
 
 Graveyard = Sector:subclass {
    name = 'Graveyard',
+   monsters = 10,
+   monstersLevel = false,
+   monstersCategory = {mob.Spectre},
 }
 
 function Graveyard:init()
