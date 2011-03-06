@@ -17,7 +17,7 @@ STATUS_W = 30
 STATUS_H = 10
 
 MESSAGES_W = 30
-MESSAGES_H = 10
+MESSAGES_H = 12
 
 local viewConsole
 local messagesConsole
@@ -134,11 +134,13 @@ end
 
 function drawStatus(player)
    local lines = {
-      {'Turn %d', game.turn},
+      {map.sectorName(player.x, player.y) or ''},
       {''},
-      {'Level %d', player.level},
-      {'HP: %d/%d', player.hp, player.maxHp},
-      {'Attack: %s', dice.describe(player.attackDice)},
+      {'Turn     %d', game.turn},
+      {''},
+      {'Level    %d', player.level},
+      {'HP       %d/%d', player.hp, player.maxHp},
+      {'Attack   %s', dice.describe(player.attackDice)},
    }
 
    statusConsole:clear()
@@ -196,8 +198,7 @@ function drawMap(xPos, yPos)
          local x = xv - xc + xPos
          local y = yv - yc + yPos
          local tile = map.get(x, y)
-         local char, color
-         if tile then
+         if not tile.empty then
             local char, color = tileAppearance(tile)
             viewConsole:putCharEx(xv, yv, char, color,
                                   C.black)
@@ -256,7 +257,7 @@ function look()
 
       -- Describe position
       local x, y = xv - xc + game.player.x, yv - yc + game.player.y
-      describe_tile(map.get(x, y))
+      describeTile(map.get(x, y))
 
       blitConsoles()
 
@@ -283,7 +284,7 @@ function look()
    blitConsoles()
 end
 
-function describe_tile(tile)
+function describeTile(tile)
    if tile and tile.visible then
       message(tile.glyph[2], '%s.', tile.name)
       if tile.mob then
@@ -298,3 +299,48 @@ function describe_tile(tile)
       message(C.grey, 'Out of sight.')
    end
 end
+
+local helpText = [[
+--- Dwarftown ---
+
+bla bla bla
+
+--- Keybindings ---
+
+Move:  numpad,             Inventory:    i
+       arrow keys,         Pick up:      g, ,
+       yuhjklbn            Drop:         d
+Wait:  5, .                Quit:         q, Esc
+Look:  x                   Help:  ?
+]]
+
+function help()
+   rootConsole:clear()
+   rootConsole:setDefaultForeground(C.lighterGrey)
+   rootConsole:print(1, 1, helpText)
+   tcod.console.flush()
+   tcod.console.waitForKeypress(true)
+end
+
+function screenshot()
+   tcod.system.saveScreenshot()
+end
+
+--[[
+function mapScreenshot()
+   local con = tcod.Console(20,20)--map.WIDTH, map.HEIGHT)
+   for x = 0, map.WIDTH-1 do
+      for y = 0, map.HEIGHT-1 do
+         local tile = map.get(x, y)
+         if not tile.empty then
+            local char, color = tileAppearance(tile)
+            con:putCharEx(x, y, char, color,
+                          C.black)
+         end
+      end
+   end
+   local image = tcod.Image(con)
+   image:refreshConsole(con)
+   image:save('map.png')
+end
+--]]

@@ -15,6 +15,7 @@ Mob = class.Object:subclass {
    -- regeneration rate: how many turns to full regeneration
    regen = 80,
    armor = 0,
+   lightRadius = 0,
 }
 
 function Mob:init()
@@ -27,10 +28,10 @@ function Mob._get:tile()
 end
 
 function Mob:putAt(x, y)
-   map.addMob(self)
    assert(not self.x and not self.y)
    self.x, self.y = x, y
    self.tile.mob = self
+   map.addMob(self)
 end
 
 function Mob:remove()
@@ -41,12 +42,12 @@ end
 
 function Mob:canWalk(dx, dy)
    local tile = map.get(self.x+dx, self.y+dy)
-   return tile and tile.walkable and not tile.mob
+   return tile.walkable and not tile.mob
 end
 
 function Mob:canAttack(dx, dy)
    local tile = map.get(self.x+dx, self.y+dy)
-   return tile and tile.mob
+   return tile.mob
 end
 
 function Mob:walk(dx, dy)
@@ -88,8 +89,9 @@ Player = Mob:subclass {
 
    level = 1,
    exp = 0,
-   hp = 10,
-   maxHp = 10,
+   --maxExp = 10,
+   --hp = 10,
+   --maxHp = 10,
    regen = 40,
 
    --attackDice = {1,3,1},
@@ -100,6 +102,8 @@ Player = Mob:subclass {
 function Player:init()
    self.items = {}
    self.slots = {}
+   self:calcStats()
+   self.hp = self.maxHp
 end
 
 function Player._get:attackDice()
@@ -112,10 +116,60 @@ function Player._get:attackDice()
    end
 end
 
+function Player:calcStats()
+   self.maxExp = self.level * 10
+   self.maxHp = 10 + (self.level-1) * 5
+end
+
+function Player:changeLightRadius(a)
+   local x, y = self.x, self.y
+   self:remove()
+   self.lightRadius = self.lightRadius + a
+   self:putAt(x, y)
+end
+
+function Player:recalcFov()
+   local x, y = self.x, self.y
+   self:remove()
+   self:putAt(x, y)
+end
+
+function Player:canDig(dx, dy)
+   if not self.digging then
+      return false
+   end
+   return map.canDig(self.x+dx, self.y+dy)
+end
+
+function Player:dig(dx, dy)
+   map.dig(self.x+dx, self.y+dy)
+   self:recalcFov()
+   ui.message('You dig.')
+   self:onDig(dx, dy)
+end
+
+function Player:tick()
+   light = self.slots.light
+   if light then
+      light.turnsLeft = light.turnsLeft - 1
+      if light.turnsLeft == 0 then
+         ui.message('Your %s is extinguished.', light.descr)
+         self:destroyFromSlot('light')
+      end
+   end
+end
+
+function Player:destroyFromSlot(slot)
+   item = self.slots[slot]
+   item:onUnequip(self)
+   self.slots[slot] = nil
+   util.delete(self.items, item)
+end
+
 function Player:putAt(x, y)
-   map.computeFov(x, y, self.fovRadiusLight, self.fovRadiusDark)
    Mob.putAt(self, x, y)
    map.get(x, y):onPlayerEnter()
+   map.computeFov(x, y, self.fovRadiusLight, self.fovRadiusDark)
 end
 
 function Player:remove()
@@ -198,13 +252,34 @@ function Player:die()
    self.dead = true
 end
 
-Monster = Mob:subclass()
+function Player:addExp(a)
+   self.exp = self.exp + a
+   while self.exp >= self.maxExp do
+      self:advance()
+   end
+end
+
+function Player:advance()
+   self.exp = self.exp - self.maxExp
+   self.level = self.level + 1
+   self:calcStats()
+   self.hp = self.maxHp
+   ui.message('Congratulations! You advance to level ', self.level)
+end
+
+Monster = Mob:subclass {
+   hostile = true,
+   level = 1,
+}
 
 function Monster:receiveDamage(damage, from)
    self.hp = self.hp - damage
    if self.hp <= 0 then
       ui.message('%s is killed!', self.descr_the)
       self:die()
+      if from.isPlayer then
+         from:addExp(self.level)
+      end
    end
 end
 
@@ -255,11 +330,20 @@ function Monster._get:descr_the()
    return util.descr_the(self.descr)
 end
 
-Goblin = Monster:subclass {
+Rat = Monster:subclass {
+   glyph = {'r', C.darkOrange},
+   name = 'rat',
+
+   attackDice = {1,3,0},
+
+   maxHp = 5,
+}
+
+GiantRat = Rat:subclass {
    glyph = {'g', C.lighterBlue},
    name = 'goblin',
 
    attackDice = {1,4,1},
 
-   maxHp = 5,
+   maxHp = 7,
 }

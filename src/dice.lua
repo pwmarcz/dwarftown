@@ -4,6 +4,10 @@ require 'tcod'
 
 local gen = tcod.Random()
 
+function getInt(a, b)
+   return gen:getInt(a, b)
+end
+
 -- roll AdB+C
 function roll(d)
    local a, b, c = unpack(d)

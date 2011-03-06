@@ -9,6 +9,7 @@ require 'item'
 require 'mapgen.world'
 
 local K = tcod.k
+local C = tcod.color
 
 local keybindings = {
    [{'y', '7'}] = {'walk', {-1, -1}},
@@ -25,6 +26,9 @@ local keybindings = {
    [{'u', 'i'}] = 'inventory',
    [{'x', ';'}] = 'look',
    [{'q', K.ESCAPE}] = 'quit',
+   [{'?'}] = 'help',
+   [{K.F11}] = 'screenshot',
+   [{K.F12}] = 'mapScreenshot',
 }
 
 player = nil
@@ -39,6 +43,9 @@ function init()
    local x, y = mapgen.world.createWorld()
 
    player = mob.Player:make()
+   table.insert(player.items, item.Torch:make())
+   table.insert(player.items, item.PickAxe:make())
+
    player:putAt(x, y)
 
    turn = 0
@@ -56,7 +63,8 @@ function mainLoop()
          map.tick()
       end
       if player.dead then
-         ui.prompt({K.ENTER, K.KPENTER}, '[Game over. Press ENTER]')
+         ui.prompt({K.ENTER, K.KPENTER}, C.red,
+                   '[Game over. Press ENTER]')
          done = true
       end
    end
@@ -90,11 +98,14 @@ function command.walk(dx, dy)
    elseif player:canWalk(dx, dy) then
       player:walk(dx, dy)
       return true
+   elseif player:canDig(dx, dy) then
+      player:dig(dx, dy)
+      return true
    end
 end
 
 function command.quit()
-   if ui.prompt({'y', 'n'}, 'Quit? [yn]') == 'y' then
+   if ui.prompt({'y', 'n'}, C.green, 'Quit? [yn]') == 'y' then
       done = true
    end
 end
@@ -134,4 +145,19 @@ end
 
 function command.look()
    ui.look()
+end
+
+function command.help()
+   ui.help()
+end
+
+function command.screenshot()
+   ui.screenshot()
+   ui.message(C.green, 'Screenshot saved.')
+end
+
+function command.mapScreenshot()
+   ui.message('Saving map screenshot...')
+   ui.mapScreenshot()
+   ui.message(C.green, 'Map screenshot saved.')
 end

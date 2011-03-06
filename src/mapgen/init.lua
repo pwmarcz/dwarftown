@@ -17,11 +17,8 @@ Room = class.Object:subclass {
    floor = map.Floor,
 }
 
--- used instead of nil to simplify algorithms
-local emptyTile = map.Empty:make()
-
 function Room:get(x, y)
-   return self[BIG_W*y+x] or emptyTile
+   return self[BIG_W*y+x] or map.emptyTile
 end
 
 function Room:set(x, y, tile)
@@ -135,8 +132,10 @@ function Room:placeIn(room, x, y)
       for y1 = 0, self.h-1 do
          local tile = self:get(x1, y1)
          local tile2 = room:get(x+x1, y+y1)
-         if tile2.type == ' ' or tile.type == '.' then
-            room:set(x+x1, y+y1, tile)
+         if tile2.empty or tile.type == '.' then
+            if not tile.empty then
+               room:set(x+x1, y+y1, tile)
+            end
          end
       end
    end
@@ -145,7 +144,9 @@ end
 function Room:placeOnMap(x, y)
    for x1 = 0, self.w-1 do
       for y1 = 0, self.h-1 do
-         map.set(x+x1, y+y1, self:get(x1, y1))
+         if not self:get(x1,y1).empty then
+            map.set(x+x1, y+y1, self:get(x1, y1))
+         end
       end
    end
 end
@@ -168,7 +169,7 @@ function Room:connect(points, makeDoors)
       for i = 0, n-1 do
          local x, y = path:get(i)
          local c = self:get(x, y).type
-         if c == '+' then
+         if c == '+' or c == '.' then
             -- pass
          elseif c == '#' and makeDoors then
             self:set(x, y, map.Door)

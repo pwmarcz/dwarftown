@@ -56,8 +56,8 @@ function makeTetrisDungeon(w, h)
    local rooms = makeTetrominoRooms()
    local dungeon = mapgen.Room:make()
    for _ = 1, 1000 do
-      local i = dice.roll {1, w, -1}
-      local j = dice.roll {1, h, -1}
+      local i = dice.getInt(0, w-1)
+      local j = dice.getInt(0, h-1)
       local room = dice.choice(rooms)
       local x, y = i*CELL_W, j*CELL_H
       if room:canPlaceIn(dungeon, x, y, true) then

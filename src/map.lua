@@ -5,55 +5,78 @@ require 'tcod'
 
 local C = tcod.color
 
-WIDTH = 800
-HEIGHT = 400
+WIDTH = 80
+HEIGHT = 100
 
 local tiles
 local tcodMap
-local monsters
+local mobs
+sectorNames = nil
 
 function init()
    tiles = {}
    tcodMap = tcod.Map(WIDTH, HEIGHT)
-   monsters = {}
+   mobs = {}
+   sectorNames = {}
+end
 
-   for x = 1, 40 do
-      for y = 1, 20 do
-         local tile
-         if x == 1 or x == 40 or y == 1 or y == 20 then
-            tile = Wall:make()
-         else
-            tile = Floor:make()
-         end
-         set(x, y, tile)
-      end
+function addMob(m)
+   if m.lightRadius > 0 then
+      computeLight(m.x, m.y, m.lightRadius, 1)
    end
-   local lamp = Lamp:make()
-   set(1,2,lamp)
-   lamp:computeLight(1,2)
+   mobs[m] = true
 end
 
-function addMob(monst)
-   monsters[monst] = true
-end
-
-function removeMob(monst)
-   monsters[monst] = nil
+function removeMob(m)
+   if m.lightRadius > 0 then
+      computeLight(m.x, m.y, m.lightRadius, -1)
+   end
+   mobs[m] = nil
 end
 
 function tick()
-   for monst, _ in pairs(monsters) do
-      monst:tick()
+   for m, _ in pairs(mobs) do
+      m:tick()
    end
 end
 
+function sectorName(x1, y1)
+   for _, sec in ipairs(sectorNames) do
+      x, y, w, h, name = unpack(sec)
+      if x <= x1 and x1 < x+w and
+         y <= y1 and y1 < y+h
+      then
+         return name
+      end
+   end
+end
+
+
 function get(x, y)
-   return tiles[y*WIDTH + x]
+   return tiles[y*WIDTH + x] or emptyTile
 end
 
 function set(x, y, tile)
    tiles[y*WIDTH + x] = tile
    tcodMap:setProperties(x, y, tile.transparent, tile.walkable)
+end
+
+function canDig(x, y)
+   if x <= 0 or x >= WIDTH-1 or y <= 0 or y >= HEIGHT - 1 then
+      return false
+   end
+   return get(x, y).diggable
+end
+
+function dig(x, y)
+   set(x, y, Floor:make())
+   for x1 = x-1, x+1 do
+      for y1 = y-1, y+1 do
+         if get(x1, y1).empty then
+            set(x1, y1, Stone:make())
+         end
+      end
+   end
 end
 
 function eraseFov(x, y, radius)
@@ -95,7 +118,7 @@ end
 -- Checks if a tile is lit.
 function map.getLight(x, y, px, py)
    tile = get(x, y)
-   if tile.transparent then
+   if tile.transparent or tile.light > 0 then
       return tile.light
    else
       -- A wall is lit when we have LOS to any adjacent tile that is lit.
@@ -117,7 +140,7 @@ function rect(x, y, radius)
       for x1 = x-radius, x+radius do
          for y1 = y-radius, y+radius do
             local tile = get(x1, y1)
-            if tile then
+            if not tile.empty then
                coroutine.yield(x1, y1, tile)
             end
          end
@@ -210,18 +233,23 @@ Empty = Tile:subclass {
    glyph = {' ', C.black},
    type = ' ',
    name = '<empty>',
+   empty = true
 }
 
+emptyTile = Empty:make()
+
 Wall = Tile:subclass {
-   glyph = {'#', C.darkOrange},
+   glyph = {'#', C.darkerOrange},
    type = '#',
    name = 'wall',
+   diggable = true,
 }
 
 Stone = Tile:subclass {
    glyph = {'#', C.grey},
    type = '#',
    name = 'stone',
+   diggable = true,
 }
 
 
@@ -244,8 +272,9 @@ Grass = Floor:subclass {
    name = 'grass',
 }
 
-TallTree = Wall:subclass {
+TallTree = Tile:subclass {
    glyph = {'#', C.darkerGreen},
+   type = '#',
    name = 'tall tree',
 }
 
@@ -255,8 +284,9 @@ Tree = Floor:subclass {
 }
 
 LightSource = Tile:subclass {
-   type = '#',
+   type = '^',
    lightRadius = 6,
+   light = 1,
 }
 
 function LightSource:computeLight(x, y)
