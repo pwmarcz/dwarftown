@@ -5,7 +5,6 @@ require 'tcod'
 require 'map'
 require 'dice'
 require 'util'
-require 'game'
 
 local C = tcod.color
 
@@ -343,15 +342,15 @@ function Monster:tick()
 
    if self.hostile and self:canSeePlayer() then
       dx, dy = util.dirTowards(
-         self.x, self.y, game.player.x, game.player.y)
+         self.x, self.y, map.player.x, map.player.y)
    else
       -- TODO last known position
       dx, dy = util.randomDir()
    end
 
    if self.hostile and
-      self.x+dx == game.player.x and
-      self.y+dy == game.player.y
+      self.x+dx == map.player.x and
+      self.y+dy == map.player.y
    then
       self:attack(dx, dy)
    elseif self:canWalk(dx, dy) then

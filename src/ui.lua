@@ -2,7 +2,6 @@ module('ui', package.seeall)
 
 require 'tcod'
 require 'map'
-require 'game'
 require 'util'
 
 local C = tcod.color
@@ -43,9 +42,9 @@ end
 
 function update()
    rootConsole:clear()
-   drawMap(game.player.x, game.player.y)
+   drawMap(map.player.x, map.player.y)
    drawMessages()
-   drawStatus(game.player)
+   drawStatus(map.player)
    blitConsoles()
 end
 
@@ -145,8 +144,7 @@ function drawStatus(player)
       {sectorName or ''},
       {''},
       {'Turn     %d', game.turn},
-      {''},
-      {''}, -- line 5: health bar
+      {''}, -- line 4: health bar
       {'HP       %d/%d', player.hp, player.maxHp},
       {'Level    %d (%d/%d)', player.level, player.exp, player.maxExp},
       {'Armor    %d', player.armor},
@@ -159,15 +157,17 @@ function drawStatus(player)
       statusConsole:print(0, i-1, string.format(unpack(msg)))
    end
 
-   local y = 4
-   local health = math.ceil((STATUS_W-2) * player.hp / player.maxHp)
-   statusConsole:putCharEx(0, y, ord('['), C.grey, C.black)
-   statusConsole:putCharEx(STATUS_W - 1, y, ord(']'), C.grey, C.black)
-   for i = 1, STATUS_W-2 do
-      if i - 1 < health then
-         statusConsole:putCharEx(i, y, ord('*'), C.white, C.black)
-      else
-         statusConsole:putCharEx(i, y, ord('-'), C.grey, C.black)
+   if player.hp < player.maxHp then
+      local y = 3
+      local health = math.ceil((STATUS_W-2) * player.hp / player.maxHp)
+      statusConsole:putCharEx(0, y, ord('['), C.grey, C.black)
+      statusConsole:putCharEx(STATUS_W - 1, y, ord(']'), C.grey, C.black)
+      for i = 1, STATUS_W-2 do
+         if i - 1 < health then
+            statusConsole:putCharEx(i, y, ord('*'), C.white, C.black)
+         else
+            statusConsole:putCharEx(i, y, ord('-'), C.grey, C.black)
+         end
       end
    end
 
@@ -279,7 +279,7 @@ function look()
       viewConsole:putCharEx(xv, yv, char, C.black, color)
 
       -- Describe position
-      local x, y = xv - xc + game.player.x, yv - yc + game.player.y
+      local x, y = xv - xc + map.player.x, yv - yc + map.player.y
       describeTile(map.get(x, y))
 
       blitConsoles()

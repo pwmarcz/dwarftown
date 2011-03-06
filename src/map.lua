@@ -12,6 +12,7 @@ local tiles
 local tcodMap
 local mobs
 sectors = nil
+player = nil
 
 function init()
    tiles = {}

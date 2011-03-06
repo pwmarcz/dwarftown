@@ -47,6 +47,7 @@ function init()
    table.insert(player.items, item.Torch:make())
    table.insert(player.items, item.PickAxe:make())
 
+   map.player = player
    player:putAt(x, y)
 
    turn = 0
