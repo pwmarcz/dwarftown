@@ -175,3 +175,19 @@ function PotionHealth:onUse(player)
    player.hp = math.min(player.hp, player.maxHp)
    player:destroyItem(self)
 end
+
+PotionNightVision = Item:subclass {
+   glyph = {'!', C.yellow},
+   name = 'potion of night vision',
+
+   boost = 50,
+   level = 3,
+}
+
+function PotionNightVision:onUse(player)
+   ui.message(
+      'You drink %s.',
+      self.descr_the)
+   player:addNightVisionBoost(self.boost)
+   player:destroyItem(self)
+end

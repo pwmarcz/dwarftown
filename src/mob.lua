@@ -15,6 +15,9 @@ Mob = class.Object:subclass {
    regen = 80,
    armor = 0,
    lightRadius = 0,
+
+   speed = 0,
+   energy = 0,
 }
 
 function Mob:init()
@@ -53,17 +56,35 @@ function Mob:canAttack(dx, dy)
    return tile.mob
 end
 
+function Mob:spendEnergy()
+   self.energy = self.energy - 1
+end
+
+function Mob:wait()
+   --
+end
+
 function Mob:walk(dx, dy)
    local x, y = self.x, self.y
    self:remove()
    self:putAt(x+dx, y+dy)
-   return true
 end
 
 function Mob:tick()
    if self.dead then
       return
    end
+
+   -- Get energy
+   local en = 1
+   if self.speed > 0 then
+      en = en + 0.15*self.speed
+   elseif self.speed < 0 then
+      en = en + 0.05*self.speed
+   end
+   self.energy = self.energy + en
+
+   -- Regenerate HP
    local n = self.maxHp/self.regen -- how many HPs per turn
    local n1 = math.floor(n)
    local p = math.floor((n-n1)*100)
@@ -74,16 +95,18 @@ function Mob:tick()
    self.hp = math.min(self.hp, self.maxHp)
 end
 
+function Mob:act()
+end
+
 function Mob:attack(dx, dy)
    local mob = map.get(self.x+dx, self.y+dy).mob
    if mob.dead then
       return
    end
    local damage = dice.roll(self.attackDice)
-   damage = math.max(0, damage - mob.armor)
+   damage = math.max(0, damage - math.max(mob.armor, 0))
    self:onAttack(mob, damage)
    mob:receiveDamage(damage, self)
-   return true
 end
 
 Player = Mob:subclass {
@@ -102,6 +125,8 @@ Player = Mob:subclass {
    --maxHp = 10,
    regen = 40,
 
+   energy = 1,
+
    --attackDice = {1,3,1},
 
    maxItems = 10,
@@ -110,6 +135,7 @@ Player = Mob:subclass {
 function Player:init()
    self.items = {}
    self.slots = {}
+   self.boosts = {}
    self:calcStats()
    self.hp = self.maxHp
 end
@@ -127,6 +153,10 @@ end
 function Player:calcStats()
    self.maxExp = self.level * 10
    self.maxHp = 10 + (self.level-1) * 5
+end
+
+function Player:refundEnergy()
+   self.energy = self.energy + 1
 end
 
 function Player:changeLightRadius(a)
@@ -154,13 +184,17 @@ function Player:dig(dx, dy)
    self:recalcFov()
    ui.message('You dig.')
    self:onDig(dx, dy)
-   return true
+end
+
+function Player:act()
+   assert(false)
 end
 
 function Player:attack(dx, dy)
    local m = map.get(self.x+dx, self.y+dy).mob
    if not m.hostile then
       if ui.prompt({'y', 'n'}, C.green, 'Attack %s? [yn]', m.descr_the) == 'n' then
+         self:refundEnergy()
          return
       end
    end
@@ -186,6 +220,18 @@ function Player:tick()
          self:destroyItem(light)
       end
    end
+   for k, v in pairs(self.boosts) do
+      v = v - 1
+      self.boosts[k] = v
+      if v <= 0 then
+         self.boosts[k] = nil
+         if k == 'nightVision' then
+            ui.message('Your vision returns to normal.')
+            self.nightVision = false
+            self:recalcFov()
+         end
+      end
+   end
    Mob.tick(self)
 end
 
@@ -200,7 +246,7 @@ end
 function Player:putAt(x, y)
    Mob.putAt(self, x, y)
    map.get(x, y):onPlayerEnter()
-   map.computeFov(x, y, self.fovRadiusLight, self.fovRadiusDark)
+   map.computeFov()
 end
 
 function Player:remove()
@@ -219,11 +265,11 @@ end
 function Player:pickUp(item)
    if #self.items > self.maxItems then
       ui.message('Your backpack is full!')
+      self:refundEnergy()
    else
       ui.message('You pick up %s.', item.descr_the)
       self.tile:removeItem(item)
       table.insert(self.items, item)
-      return true
    end
 end
 
@@ -234,21 +280,18 @@ function Player:drop(item)
    ui.message('You drop %s.', item.descr_the)
    util.delete(self.items, item)
    self.tile:putItem(item)
-   return true
 end
 
 function Player:use(item)
    if item.equipped then
       self:unequip(item)
-      return true
    elseif item.slot then
       self:equip(item)
-      return true
    elseif item.onUse then
       item:onUse(self)
-      return true
    else
       ui.message('You don\'t know how to use %s.', item.descr_the)
+      self:refundEnergy()
    end
 end
 
@@ -262,7 +305,6 @@ function Player:equip(item)
    if item.onEquip then
       item:onEquip(self)
    end
-   return true
 end
 
 function Player:unequip(item)
@@ -273,7 +315,6 @@ function Player:unequip(item)
    if item.onUnequip then
       item:onUnequip(self)
    end
-   return true
 end
 
 function Player:onAttack(mob, damage)
@@ -298,6 +339,13 @@ function Player:addExp(level)
    while self.exp >= self.maxExp do
       self:advance()
    end
+end
+
+function Player:addNightVisionBoost(boost)
+   self.boosts.nightVision = boost
+   self.nightVision = true
+   self:recalcFov()
+   ui.message('You suddenly see more.');
 end
 
 function Player:advance()
@@ -344,9 +392,7 @@ function Monster:onAttack(mob, damage)
    end
 end
 
-function Monster:tick()
-   Mob.tick(self)
-
+function Monster:act()
    if self.hostile and self:canSeePlayer() then
       dx, dy = util.dirTowards(
          self.x, self.y, map.player.x, map.player.y)
@@ -362,6 +408,8 @@ function Monster:tick()
       self:attack(dx, dy)
    elseif self:canWalk(dx, dy) then
       self:walk(dx, dy)
+   else
+      self:wait()
    end
 end
 
@@ -396,16 +444,16 @@ Mimic = Monster:subclass {
 }
 
 function Mimic:init()
-   self.item = dice.choiceLevel(item.Item.all):make()
+   self.item = dice.choiceEx(item.Item.all):make()
    self.glyph = self.item.glyph
    self.name = self.item.name
 end
 
-function Mimic:tick()
+function Mimic:act()
    if self.awake then
-      Monster.tick(self)
+      Monster.act(self)
    else
-      Mob.tick(self)
+      self:wait()
    end
 end
 

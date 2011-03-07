@@ -22,26 +22,25 @@ function createWorld()
    world:placeOnMap(0, 0)
    world:print()
    map.sectors = world.sectors
-   return sectors[1]:getStartingPoint()
+   return sectors[3]:getStartingPoint()
 end
 
 Sector = class.Object:subclass {
-   items = 0,
-   itemsLevel = 1,
+   nItems = 0,
+   itemsLevel = 0,
 
-   monsters = 0,
-   monstersLevel = 1,
-   monstersCategory = false,
+   nMonsters = 0,
+   monsters = nil,
 }
 
 function Sector:place(x, y, w, h)
    local sector = self:make { x = x, y = y, w = w, h = h }
-   if sector.items > 0 then
-      sector.room:addItems(sector.items, sector.itemsLevel)
+   if sector.nItems > 0 then
+      sector.room:addItems(sector.nItems, sector.itemsLevel)
    end
-   if sector.monsters > 0 then
+   if sector.nMonsters > 0 then
       sector.room:addMonsters(
-         sector.monsters, sector.monstersLevel, sector.monstersCategory)
+         sector.nMonsters, sector.monstersLevel, sector.monsters or mob.Monster.all)
    end
    sector.room:placeIn(world, x, y)
    table.insert(world.sectors, sector)
@@ -55,12 +54,11 @@ end
 
 Forest = Sector:subclass {
    name = 'Forest',
-   itemsLevel = 0,
+
    roadH = 10,
 
-   monsters = 10,
-   monstersLevel = false,
-   monstersCategory = {mob.Bear, mob.Squirrel},
+   nMonsters = 10,
+   monsters = {mob.Bear, mob.Squirrel},
 }
 
 function Forest:init()
@@ -100,12 +98,11 @@ end
 
 RatCaves = Sector:subclass {
    name = 'Rat Caves',
-   items = 10,
+   nItems = 10,
    itemsLevel = 1,
 
-   monsters = 20,
-   monstersLevel = false,
-   monstersCategory = {mob.Rat, mob.GiantRat},
+   nMonsters = 20,
+   monsters = {mob.Rat, mob.GiantRat},
 }
 
 function RatCaves:init()
@@ -136,7 +133,7 @@ function makeShop(w, h)
          for y = 1,h do
             a = dice.getInt(1, 50)
             if a < 10 then
-               local it = dice.choiceLevel(
+               local it = dice.choiceEx(
                   item.Item.all, 2):make()
                room:get(x, y):putItem(it)
             elseif a == 50 then
@@ -174,9 +171,8 @@ end
 
 Graveyard = Sector:subclass {
    name = 'Dwarftown Graveyard',
-   monsters = 10,
-   monstersLevel = false,
-   monstersCategory = {mob.Spectre},
+   nMonsters = 10,
+   monsters = {mob.Spectre},
 }
 
 function Graveyard:init()

@@ -147,9 +147,15 @@ function drawStatus(player)
       {''}, -- line 4: health bar
       {'HP       %d/%d', player.hp, player.maxHp},
       {'Level    %d (%d/%d)', player.level, player.exp, player.maxExp},
-      {'Armor    %d', player.armor},
       {'Attack   %s', dice.describe(player.attackDice)},
    }
+
+   if player.armor ~= 0 then
+      table.insert(lines, {'Armor    %s', util.signedDescr(player.armor)})
+   end
+   if player.speed ~= 0 then
+      table.insert(lines, {'Speed    %s', util.signedDescr(player.speed)})
+   end
 
    statusConsole:clear()
    statusConsole:setDefaultForeground(C.lightGrey)
@@ -203,7 +209,7 @@ end
 function splitMessage(text, n)
    local lines = {}
    for _, w in ipairs(util.split(text, ' ')) do
-      if #lines > 0 and w:len() + lines[#lines]:len() + 1 <= n then
+      if #lines > 0 and w:len() + lines[#lines]:len() + 1 < n then
          lines[#lines] = lines[#lines] .. ' ' .. w
       else
          table.insert(lines, w)
@@ -241,15 +247,21 @@ function tileAppearance(tile)
 
    if tile.visible then
       char, color = glyph(tile:getSeenGlyph())
-      if tile.seenLight == 0 then
-         color = color * 0.75
+      if map.player.nightVision then
+         if tile.seenLight > 0 then
+            color = color * 2
+         end
+      else
+         if tile.seenLight == 0 then
+            color = color * 0.8
+         end
       end
    else
       char, color = glyph(tile.memGlyph)
       if tile.memLight == 0 then
-         color = color * 0.4
+         color = color * 0.35
       else
-         color = color * 0.5
+         color = color * 0.6
       end
    end
 

@@ -23,7 +23,7 @@ local keybindings = {
    [{'n', '3'}] = {'walk', {1, 1}},
    [{'g', ','}] = 'pickUp',
    [{'d'}] = 'drop',
-   [{'u', 'i'}] = 'inventory',
+   [{'i'}] = 'inventory',
    [{'x', ';'}] = 'look',
    [{'q', K.ESCAPE}] = 'quit',
    [{'?'}] = 'help',
@@ -46,6 +46,7 @@ function init()
    player = mob.Player:make()
    table.insert(player.items, item.Torch:make())
    table.insert(player.items, item.PickAxe:make())
+   table.insert(player.items, item.PotionNightVision:make())
 
    map.player = player
    player:putAt(x, y)
@@ -62,9 +63,10 @@ function mainLoop()
       ui.update()
       ui.newTurn()
       local key = tcod.console.waitForKeypress(true)
-      if executeCommand(key) then
-         turn = turn + 1
+      executeCommand(key)
+      while player.energy <= 0 and not player.dead do
          map.tick()
+         turn = turn + 1
       end
       if player.dead then
          if game.wizard then
@@ -88,9 +90,9 @@ end
 function executeCommand(key)
    local cmd = getCommand(key)
    if type(cmd) == 'table' then
-      return command[cmd[1]](unpack(cmd[2]))
+      command[cmd[1]](unpack(cmd[2]))
    elseif type(cmd) == 'string' then
-      return command[cmd]()
+      command[cmd]()
    end
 end
 
@@ -106,12 +108,15 @@ function getCommand(key)
 end
 
 function command.walk(dx, dy)
+   player:spendEnergy()
    if player:canAttack(dx, dy) then
-      return player:attack(dx, dy)
+      player:attack(dx, dy)
    elseif player:canWalk(dx, dy) then
-      return player:walk(dx, dy)
+      player:walk(dx, dy)
    elseif player:canDig(dx, dy) then
-      return player:dig(dx, dy)
+      player:dig(dx, dy)
+   else
+      player:refundEnergy()
    end
 end
 
@@ -122,35 +127,44 @@ function command.quit()
 end
 
 function command.wait()
-   return true
+   player:spendEnergy()
+   player:wait()
 end
 
 function command.pickUp()
+   player:spendEnergy()
    local items = player.tile.items
    if items then
       if #items == 1 then
-         return player:pickUp(items[1])
+         player:pickUp(items[1])
+         return
       end
-      local item = ui.promptItems(player.tile.items, 'Pick up:')
+      local item = ui.promptItems(items, 'Pick up:')
       if item then
-         return player:pickUp(item)
+         player:pickUp(item)
+         return
+      else
+         player:refundEnergy()
       end
    else
       ui.message('There is nothing here.')
+      player:refundEnergy()
    end
 end
 
 function command.drop()
    local item = ui.promptItems(player.items, 'Drop:')
    if item then
-      return player:drop(item)
+      player:drop(item)
+      player:spendEnergy()
    end
 end
 
 function command.inventory()
    local item = ui.promptItems(player.items, 'Use:')
    if item then
-      return player:use(item)
+      player:use(item)
+      player:spendEnergy()
    end
 end
 

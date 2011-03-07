@@ -38,6 +38,12 @@ end
 function tick()
    for m, _ in pairs(mobs) do
       m:tick()
+      if not m.isPlayer then
+         while m.energy > 0 do
+            m:spendEnergy()
+            m:act()
+         end
+      end
    end
 end
 
@@ -79,21 +85,24 @@ function dig(x, y)
    end
 end
 
-function eraseFov(x, y, radius)
-   for _,_,tile in rect(x, y, radius) do
-      if tile.visible then
+function eraseFov()
+   for _,_,tile in rect(player.x, player.y, player.fovRadiusLight)
+   do
+      if tile.inFov then
          tile.visible = false
          tile.inFov = false
       end
    end
 end
 
-function computeFov(x, y, radiusLight, radiusDark)
+function computeFov()
+   local x, y = player.x, player.y
+   local radiusLight, radiusDark = player.fovRadiusLight, player.fovRadiusDark
    tcodMap:computeFov(x, y, radiusLight)
    for x1,y1,tile,d in fovRect(x, y, radiusLight) do
       tile.inFov = true
       light = map.getLight(x1, y1, x, y)
-      if light > 0 then
+      if light > 0 or player.nightVision then
          tile.visible = true
       else
          tile.visible = d <= radiusDark
@@ -136,7 +145,7 @@ function map.getLight(x, y, px, py)
 end
 
 function rect(x, y, radius)
-   function iter()
+   local function iter()
       for x1 = x-radius, x+radius do
          for y1 = y-radius, y+radius do
             local tile = get(x1, y1)
@@ -151,7 +160,7 @@ end
 
 function fovRect(x, y, radius)
    tcodMap:computeFov(x, y, radius+1, true, tcod.FOV_PERMISSIVE_8)
-   function iter()
+   local function iter()
       for x1, y1, tile in rect(x, y, radius) do
          if tcodMap:isInFov(x1, y1) then
             local d = dist(x1, y1, x, y)

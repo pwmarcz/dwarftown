@@ -276,7 +276,7 @@ end
 function Room:addItems(n, level)
    for _ = 1, n do
       local x, y, tile = self:findEmptyTile()
-      local it = dice.choiceLevel(item.Item.all, level):make()
+      local it = dice.choiceEx(item.Item.all, level):make()
       tile:putItem(it)
    end
 end
@@ -285,7 +285,7 @@ function Room:addMonsters(n, level, tbl)
    tbl = tbl or mob.Monster.all
    for _ = 1, n do
       local x, y, tile = self:findEmptyTile()
-      local m = dice.choiceLevel(tbl, level):make()
+      local m = dice.choiceEx(tbl, level):make()
       tile.mob = m
    end
 end

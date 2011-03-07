@@ -34,22 +34,35 @@ function choice(tbl)
    return tbl[gen:getInt(1, #tbl)]
 end
 
-function choiceLevel(tbl, level)
-   local n = 0
-   for _, v in ipairs(tbl) do
-      if not level or v.level <= level then
-         n = n + 1
+-- TODO frequencies
+function choiceEx(tbl, level)
+   -- returns nothing or (item, freq)
+   local function process(v)
+      if level and level > 0 and v.level > level then
+         return
+      else
+         return v, (v.freq or 1)
       end
    end
-   n = getInt(1, n)
+
+   local sum = 0
    for _, v in ipairs(tbl) do
-      if not level or v.level <= level then
-         n = n - 1
-         if n == 0 then
-            return v
+      local it, freq = process(v)
+      if it then
+         sum = sum + freq
+      end
+   end
+   sum = gen:getFloat(0, sum-0.01)
+   for _, v in ipairs(tbl) do
+      local it, freq = process(v)
+      if it then
+         sum = sum - freq
+         if sum < 0 then
+            return it
          end
       end
    end
+   assert(false)
 end
 
 -- Fisher-Yates shuffle

@@ -24,6 +24,14 @@ function sign(x)
    end
 end
 
+function signedDescr(n)
+   if n >= 0 then
+      return '+' .. n
+   else
+      return '-' .. n
+   end
+end
+
 function descr_a(s)
    local c = s:sub(1,1)
    if c:match('%u') then
