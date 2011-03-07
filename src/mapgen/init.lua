@@ -43,6 +43,40 @@ function Room:setRect(x, y, w, h, tcls)
    end
 end
 
+function Room:setEmptyRect(x, y, w, h, tcls)
+   --print(x,y,w,h)
+   for x1 = x, x+w-1 do
+      self:set(x1, y, tcls)
+      self:set(x1, y+h-1, tcls)
+   end
+   for y1 = y, y+h-1 do
+      self:set(x, y1, tcls)
+      self:set(x+w-1, y1, tcls)
+   end
+end
+
+
+function Room:setCircle(x, y, w, h, tcls, exact)
+   --print(x,y,w,h)
+   local cx = x + math.floor(w/2)
+   local cy = y + math.floor(h/2)
+
+   for x1 = x, x+w-1 do
+      for y1 = y, y+h-1 do
+         local dx = math.abs(x1-cx)/(w/2)
+         local dy = math.abs(y1-cy)/(h/2)
+         local d = math.sqrt(dx*dx+dy*dy)
+
+         if (exact and d <= 1) or
+            (not exact and dice.getFloat(0.6, 1) > d)
+         then
+            self:set(x1, y1, tcls)
+         end
+      end
+   end
+end
+
+
 function Room:print()
    for y = 0, self.h-1 do
       s = ''
@@ -91,7 +125,7 @@ function Room:setLight(light)
    for x = 0, self.w-1 do
       for y = 0, self.h-1 do
          local tile = self:get(x, y)
-         if tile.type == '.' then
+         if not tile.empty and tile.transparent then
             tile.light = light
          end
       end
@@ -134,10 +168,8 @@ function Room:placeIn(room, x, y)
       for y1 = 0, self.h-1 do
          local tile = self:get(x1, y1)
          local tile2 = room:get(x+x1, y+y1)
-         if tile2.empty or tile.type == '.' then
-            if not tile.empty then
-               room:set(x+x1, y+y1, tile)
-            end
+         if not tile.empty then
+            room:set(x+x1, y+y1, tile)
          end
       end
    end
@@ -277,7 +309,7 @@ function Room:addItems(n, level)
    for _ = 1, n do
       local x, y, tile = self:findEmptyTile()
       local it = dice.choiceEx(item.Item.all, level):make()
-      tile:putItem(it)
+      tile:addItem(it)
    end
 end
 
@@ -287,5 +319,23 @@ function Room:addMonsters(n, level, tbl)
       local x, y, tile = self:findEmptyTile()
       local m = dice.choiceEx(tbl, level):make()
       tile.mob = m
+   end
+end
+
+function Room:addRooms(x, y, w, h, fun, ignoreWalls)
+   local room
+   local tried
+   for _ = 1, 2000 do
+      if room == nil or tried > 20 then
+         room = fun()
+         tried = 0
+      end
+      tried = tried + 1
+      local x1 = dice.getInt(x, x+w-room.w-1)
+      local y1 = dice.getInt(y, y+h-room.h-1)
+      if room:canPlaceIn(self, x1, y1, ignoreWalls) then
+         room:placeIn(self, x1, y1)
+         room = nil
+      end
    end
 end

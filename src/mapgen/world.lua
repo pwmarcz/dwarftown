@@ -12,7 +12,7 @@ function createWorld()
    world = mapgen.Room:make {
       sectors = {}
    }
-   local sectors = {Marketplace, Graveyard, RatCaves, Forest}
+   local sectors = {Square, Marketplace, Graveyard, RatCaves, Forest}
    for i = 1, #sectors do
       sectors[i] = sectors[i]:place(10, 35*(i-1), 50, 30)
    end
@@ -22,7 +22,7 @@ function createWorld()
    world:placeOnMap(0, 0)
    world:print()
    map.sectors = world.sectors
-   return sectors[3]:getStartingPoint()
+   return sectors[1]:getStartingPoint()
 end
 
 Sector = class.Object:subclass {
@@ -78,6 +78,13 @@ function Forest:init()
       end
    end
 
+   if dice.getInt(1, 1) == 1 then
+      local w = math.floor(self.w/3)
+      local lake = makeLake(w, math.floor(2*w/3))
+      --lake:print()
+      lake:placeIn(self.room, math.floor(self.w/3), math.floor((self.h-self.roadH)/4))
+   end
+
    self.room:addWalls()
    self.room:addNearWalls(map.Tree)
    self.room:setLight(1)
@@ -94,6 +101,12 @@ end
 function Forest:getStartingPoint()
    local x, y = self.room:findEmptyTile(1, self.h - self.roadH-4, self.w, 4)
    return x + self.x, y + self.y
+end
+
+function makeLake(w, h)
+   local room = mapgen.Room:make()
+   room:setCircle(1, 1, w, h, map.Water, false)
+   return room
 end
 
 RatCaves = Sector:subclass {
@@ -113,6 +126,52 @@ function RatCaves:init()
    self.room = mapgen.cell.makeCellRoom(self.room, false)
 
    return room
+end
+
+Marketplace = Sector:subclass {
+   name = 'Dwarftown Marketplace',
+}
+
+function Marketplace:init()
+   self.room = mapgen.Room:make {
+      wall = map.Stone,
+   }
+   self.room:addRooms(
+      1, 1, self.w, self.h,
+      function()
+         local w1 = dice.getInt(5, 7)
+         local h1 = dice.getInt(3, 6)
+         return makeShop(w1, h1)
+      end,
+      false)
+   self.room:floodConnect()
+   placeCaveIns(self.room, 10)
+end
+
+function placeCaveIns(room, n)
+   room.wall = map.Stone
+   for i = 1, n do
+      local w = dice.getInt(3, 5)
+      local h = dice.getInt(2, 4)
+      local x = dice.getInt(1, room.w-w-1)
+      local y = dice.getInt(1, room.h-h-1)
+
+      room:setRect(x, y, w, h,
+                   function()
+                      local tile
+                      if dice.getInt(1, 3) > 1 then
+                         tile = room.floor:make()
+                         if dice.getInt(1, 2) == 1 then
+                            tile:addItem(item.Stone:make())
+                         end
+                      else
+                         tile = room.wall:make()
+                      end
+                      return tile
+                   end)
+   end
+   room:addWalls()
+   room:floodConnect()
 end
 
 function makeShop(w, h)
@@ -135,7 +194,7 @@ function makeShop(w, h)
             if a < 10 then
                local it = dice.choiceEx(
                   item.Item.all, 2):make()
-               room:get(x, y):putItem(it)
+               room:get(x, y):addItem(it)
             elseif a == 50 then
                room:get(x, y).mob = mob.Mimic:make()
             end
@@ -143,30 +202,6 @@ function makeShop(w, h)
       end
    end
    return room
-end
-
-Marketplace = Sector:subclass {
-   name = 'Dwarftown Marketplace',
-}
-
-function Marketplace:init()
-   self.room = mapgen.Room:make {
-      wall = map.Stone,
-   }
-   for _ = 1, 100 do
-      w1 = dice.getInt(5, 7)
-      h1 = dice.getInt(3, 6)
-      shop = makeShop(w1, h1)
-      for _ = 1,100 do
-         local x = dice.getInt(1, self.w-w1-1)
-         local y = dice.getInt(1, self.h-h1-1)
-         if shop:canPlaceIn(self.room, x, y, false) then
-            shop:placeIn(self.room, x, y)
-            break
-         end
-      end
-   end
-   self.room:floodConnect()
 end
 
 Graveyard = Sector:subclass {
@@ -192,7 +227,37 @@ function Graveyard:init()
    local wCenter = math.floor(wCells/2-2)
    local hCenter = math.floor(hCells/2-2)
    mainRoom:placeIn(self.room, wCenter*CELL_W, hCenter*CELL_H)
-   self.room:print()
    self.room = mapgen.tetris.makeTetrisDungeon(self.room, wCells, hCells)
    self.room:floodConnect()
+end
+
+Square = Sector:subclass {
+   name = 'Dwarftown Square',
+}
+
+function Square:init()
+   self.room = mapgen.Room:make {
+      wall = map.Stone,
+   }
+   self.room:addRooms(
+      1, 1, self.w-1, self.h-1,
+      function()
+         local room = mapgen.Room:make { wall = map.Wall }
+         local w = dice.getInt(7, 10)
+         local h = dice.getInt(6, 9)
+         room:setRect(1, 1, w, h, self.room.floor)
+         room:setEmptyRect(2, 2, w-1, h-1, room.wall)
+         return room
+      end,
+      false)
+   for x = 1, self.w-1 do
+      for y = 1, self.h-1 do
+         if self.room:get(x, y).empty then
+            self.room:set(x, y, self.room.floor)
+         end
+      end
+   end
+   self.room:addWalls()
+   self.room:floodConnect()
+   placeCaveIns(self.room, 4)
 end

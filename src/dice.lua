@@ -8,6 +8,10 @@ function getInt(a, b)
    return gen:getInt(a, b)
 end
 
+function getFloat(a, b)
+   return gen:getFloat(a, b)
+end
+
 -- roll AdB+C
 function roll(d)
    local a, b, c = unpack(d)

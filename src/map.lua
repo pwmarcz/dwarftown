@@ -86,10 +86,14 @@ function dig(x, y)
 end
 
 function eraseFov()
-   for _,_,tile in rect(player.x, player.y, player.fovRadiusLight)
+   for x1,y1,tile in rect(player.x, player.y, player.fovRadiusLight)
    do
       if tile.inFov then
-         tile.visible = false
+         if tile.visible then
+            tile.visible = false
+            tile.memLight = map.getLight(x1, y1, player.x, player.y)
+            tile.memGlyph = tile:getTileGlyph()
+         end
          tile.inFov = false
       end
    end
@@ -109,8 +113,6 @@ function computeFov()
       end
       if tile.visible then
          tile.seenLight = light
-         tile.memGlyph = tile:getTileGlyph()
-         tile.memLight = light
       end
    end
 end
@@ -185,6 +187,7 @@ Tile = class.Object:subclass {
    walkable = false,
    -- Tile type is #, ., + (for map generator)
    type = '?',
+   name = '?',
 
    -- visible by player
    visible = false,
@@ -216,7 +219,7 @@ function Tile:getSeenGlyph()
    end
 end
 
-function Tile:putItem(item)
+function Tile:addItem(item)
    self.items = self.items or {}
    table.insert(self.items, item)
 end
@@ -305,6 +308,15 @@ LightSource = Tile:subclass {
    type = '^',
    lightRadius = 10,
    light = 1,
+}
+
+Water = Tile:subclass {
+   glyph = {'=', C.blue},
+   type = '=',
+   name = 'water',
+
+   transparent = true,
+   walkable = false,
 }
 
 function LightSource:computeLight(x, y)

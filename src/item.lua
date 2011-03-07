@@ -57,7 +57,7 @@ Torch = LightSource:subclass {
    glyph = {'/', C.darkerOrange},
    name = 'torch',
    lightRadius = 7,
-   turns = 30,
+   turns = 300,
 
    level = 2,
 }
@@ -191,3 +191,9 @@ function PotionNightVision:onUse(player)
    player:addNightVisionBoost(self.boost)
    player:destroyItem(self)
 end
+
+Stone = Item:subclass {
+   glyph = {'*', C.darkGrey},
+   name = 'stone',
+   exclude = true,
+}

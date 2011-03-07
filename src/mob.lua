@@ -279,7 +279,7 @@ function Player:drop(item)
    end
    ui.message('You drop %s.', item.descr_the)
    util.delete(self.items, item)
-   self.tile:putItem(item)
+   self.tile:addItem(item)
 end
 
 function Player:use(item)
