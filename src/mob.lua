@@ -16,6 +16,9 @@ Mob = class.Object:subclass {
    armor = 0,
    lightRadius = 0,
 
+   fovRadiusLight = 10,
+   fovRadiusDark = 4,
+
    speed = 0,
    energy = 0,
 }
@@ -98,6 +101,10 @@ end
 function Mob:act()
 end
 
+function Mob:die()
+   self.dead = true
+end
+
 function Mob:attack(dx, dy)
    local mob = map.get(self.x+dx, self.y+dy).mob
    if mob.dead then
@@ -116,7 +123,7 @@ Player = Mob:subclass {
    descr = 'you',
 
    fovRadiusLight = 20,
-   fovRadiusDark = 3,
+   fovRadiusDark = 4,
 
    level = 1,
    exp = 0,
@@ -141,7 +148,10 @@ function Player:init()
 end
 
 function Player._get:attackDice()
-   local plus = self.level * 2 - 2
+   local plus = self.level - 1
+   if self.boosts.strength then
+      plus = plus + self.level*2
+   end
    if self.slots.weapon then
       a, b, c = unpack(self.slots.weapon.attackDice)
       return {a, b, c+plus}
@@ -203,7 +213,7 @@ end
 
 function Player:walk(dx, dy)
    if map.get(self.x+dx, self.y+dy).exit then
-      if ui.prompt({'y', 'n'}, C.green, 'Leave? [yn]') == 'y' then
+      if ui.prompt({'y', 'n'}, C.green, 'Leave? This will end the game. [yn]') == 'y' then
          self.leaving = true
       end
    else
@@ -225,11 +235,18 @@ function Player:tick()
       self.boosts[k] = v
       if v <= 0 then
          self.boosts[k] = nil
+         local message
          if k == 'nightVision' then
-            ui.message('Your vision returns to normal.')
             self.nightVision = false
             self:recalcFov()
+            message = 'Your vision returns to normal.'
+         elseif k == 'speed' then
+            self.speed = self.speed - 2
+            message = 'You slow down.'
+         elseif k == 'strength' then
+            message = 'You feel weaker.'
          end
+         ui.message(C.yellow, message)
       end
    end
    Mob.tick(self)
@@ -325,10 +342,6 @@ function Player:onAttack(mob, damage)
    end
 end
 
-function Player:die()
-   self.dead = true
-end
-
 function Player:addExp(level)
    local a = level
    if level > self.level then
@@ -341,11 +354,25 @@ function Player:addExp(level)
    end
 end
 
-function Player:addNightVisionBoost(boost)
-   self.boosts.nightVision = boost
-   self.nightVision = true
-   self:recalcFov()
-   ui.message('You suddenly see more.');
+function Player:addBoost(boost, turns)
+   local n = self.boosts[boost]
+   if not n then
+      n = 0
+      local message
+      if boost == 'nightVision' then
+         self.nightVision = true
+         self:recalcFov()
+         message = 'You suddenly see more around yourself.'
+      elseif boost == 'speed' then
+         self.speed = self.speed + 2
+         message = 'You feel yourself speed up!'
+      elseif boost == 'strength' then
+         -- attack dice code will handle this
+         message = 'Your muscles bulge.'
+      end
+      ui.message(C.yellow, message)
+   end
+   self.boosts[boost] = n + turns
 end
 
 function Player:advance()
@@ -360,6 +387,8 @@ end
 Monster = Mob:subclass {
    hostile = true,
    level = 1,
+
+   wanders = true
 }
 
 function Monster:receiveDamage(damage, from)
@@ -378,6 +407,7 @@ function Monster:receiveDamage(damage, from)
 end
 
 function Monster:die()
+   Mob.die(self)
    self:remove()
 end
 
@@ -394,19 +424,44 @@ end
 
 function Monster:act()
    if self.hostile and self:canSeePlayer() then
-      dx, dy = util.dirTowards(
+      if self.summonsTimes and self.summonsTimes > 0
+         and dice.getInt(1,15) == 1
+      then
+         self.summonsTimes = self.summonsTimes - 1
+         for x = self.x-2, self.x+2 do
+            for y = self.y-2, self.y+2 do
+               local tile = map.get(x, y)
+               if not tile.empty and tile.walkable and not tile.mob then
+                  if dice.getInt(1, 3) == 1 then
+                     local m = dice.choice(self.summonedMonsters):make()
+                     m:putAt(x, y)
+                  end
+               end
+            end
+         end
+         ui.message('%s summons monsters!', self.descr_the)
+      end
+
+      local dx, dy = util.dirTowards(
          self.x, self.y, map.player.x, map.player.y)
-   else
-      -- TODO last known position
-      dx, dy = util.randomDir()
+
+      if self.x+dx == map.player.x and
+         self.y+dy == map.player.y
+      then
+         self:attack(dx, dy)
+         return
+      elseif self:canWalk(dx, dy) then
+         self:walk(dx, dy)
+         return
+      end
+   elseif not self.wanders then
+      -- non-wandering monsters stop when they don't see player
+      self:wait()
    end
 
-   if self.hostile and
-      self.x+dx == map.player.x and
-      self.y+dy == map.player.y
-   then
-      self:attack(dx, dy)
-   elseif self:canWalk(dx, dy) then
+   -- last known position?
+   local dx, dy = util.randomDir()
+   if self:canWalk(dx, dy) then
       self:walk(dx, dy)
    else
       self:wait()
@@ -414,8 +469,16 @@ function Monster:act()
 end
 
 function Monster:canSeePlayer()
-   -- TODO proper monster FOV (incl. lights)
-   return self.tile.inFov
+   -- cheating to get LOS with player
+   if not self.tile.inFov then
+      return false
+   end
+   local d = map.dist(self.x, self.y, map.player.x, map.player.y)
+   if map.player.tile.light > 0 then
+      return d <= self.fovRadiusLight
+   else
+      return d <= self.fovRadiusDark
+   end
 end
 
 function Monster._get:descr()
@@ -432,6 +495,21 @@ function Monster._get:descr_the()
    else
       return 'something'
    end
+end
+
+GlowingFungus = Monster:subclass {
+   glyph = {'F', C.lightGreen},
+   name = 'glowing fungus',
+
+   maxHp = 3,
+   attackDice = {0, 0, 0},
+
+   freq = 0.1,
+
+   lightRadius = 4,
+}
+
+function GlowingFungus:act()
 end
 
 Mimic = Monster:subclass {
@@ -492,6 +570,7 @@ Rat = Monster:subclass {
    attackDice = {1,3,0},
 
    maxHp = 5,
+   speed = 2,
 }
 
 GiantRat = Monster:subclass {
@@ -507,8 +586,9 @@ Bear = Monster:subclass {
    glyph = {'B', C.darkOrange},
    name = 'bear',
 
-   attackDice = {1,8,1},
+   attackDice = {1,10,1},
 
+   speed = -1,
    maxHp = 20,
    level = 3,
    hostile = false,
@@ -520,7 +600,49 @@ Squirrel = Monster:subclass {
 
    attackDice = {1,2,0},
 
+   speed = 5,
    maxHp = 3,
    level = 0,
    hostile = false,
+}
+
+Goblin = Monster:subclass {
+   glyph = {'g', C.darkGreen},
+   name = 'goblin',
+
+   attackDice = {1,6,0},
+
+   maxHp = 10,
+   level = 2,
+}
+
+Ogre = Monster:subclass {
+   glyph = {'O', C.lightGreen},
+   name = 'ogre',
+
+   attackDice = {1,12,0},
+
+   speed = -1,
+   maxHp = 20,
+   level = 4,
+
+   freq = 0.5,
+}
+
+GoblinNecro = Monster:subclass {
+   glyph = {'G', C.lightGreen},
+   name = 'Goblin Necromancer',
+
+   attackDice = {1,12,0},
+
+   speed = -2,
+   maxHp = 30,
+   level = 5,
+
+   summonedMonsters = { Rat, Spectre },
+   summonsTimes = 3,
+
+   wanders = false,
+
+   exclude = true,
 }

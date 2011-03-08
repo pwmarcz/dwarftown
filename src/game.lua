@@ -47,6 +47,9 @@ function init()
    table.insert(player.items, item.Torch:make())
    table.insert(player.items, item.PickAxe:make())
    table.insert(player.items, item.PotionNightVision:make())
+   table.insert(player.items, item.PotionSpeed:make())
+   table.insert(player.items, item.PotionSpeed:make())
+   table.insert(player.items, item.PotionStrength:make())
 
    map.player = player
    player:putAt(x, y)
@@ -76,7 +79,7 @@ function mainLoop()
             end
          end
          if player.dead then
-            ui.prompt({K.ENTER, K.KPENTER}, C.red,
+            ui.prompt({K.ENTER, K.KPENTER}, C.green,
                       '[Game over. Press ENTER]')
             done = true
          end

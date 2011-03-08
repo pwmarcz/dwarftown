@@ -29,7 +29,7 @@ local ord = string.byte
 
 function init()
    tcod.console.setCustomFont(
-      'fonts/terminal10x18.png', tcod.FONT_LAYOUT_ASCII_INROW)
+      'fonts/terminal10x18.png', tcod.FONT_LAYOUT_ASCII_INROW, 16, 16)
    tcod.console.initRoot(
       SCREEN_W, SCREEN_H, 'Dwarftown', false, tcod.RENDERER_SDL)
    rootConsole = tcod.console.getRoot()
@@ -368,6 +368,7 @@ function mapScreenshot()
    ---[[
    for x = 0, map.WIDTH-1 do
       for y = 0, map.HEIGHT-1 do
+         --print(x,y)
          local tile = map.get(x, y)
          if not tile.empty then
             local char, color = tileAppearance(tile)

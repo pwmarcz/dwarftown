@@ -39,7 +39,7 @@ function tick()
    for m, _ in pairs(mobs) do
       m:tick()
       if not m.isPlayer then
-         while m.energy > 0 do
+         while m.energy > 0 and not m.dead do
             m:spendEnergy()
             m:act()
          end
@@ -62,9 +62,14 @@ function get(x, y)
    return tiles[y*WIDTH + x] or emptyTile
 end
 
+function updateProperties(x, y, tile)
+   tile = tile or get(x, y)
+   tcodMap:setProperties(x, y, tile.transparent, tile.walkable)
+end
+
 function set(x, y, tile)
    tiles[y*WIDTH + x] = tile
-   tcodMap:setProperties(x, y, tile.transparent, tile.walkable)
+   updateProperties(x, y, tile)
 end
 
 function canDig(x, y)
@@ -103,7 +108,7 @@ function computeFov()
    local x, y = player.x, player.y
    local radiusLight, radiusDark = player.fovRadiusLight, player.fovRadiusDark
    tcodMap:computeFov(x, y, radiusLight)
-   for x1,y1,tile,d in fovRect(x, y, radiusLight) do
+   for x1,y1,tile,d in fovCircle(x, y, radiusLight) do
       tile.inFov = true
       light = map.getLight(x1, y1, x, y)
       if light > 0 or player.nightVision then
@@ -119,7 +124,7 @@ end
 
 function computeLight(x, y, radius, a)
    tcodMap:computeFov(x, y, radius)
-   for _, _, tile, d in fovRect(x,y,radius) do
+   for _, _, tile, d in fovCircle(x,y,radius) do
       if tile.transparent then
          tile.light = tile.light + a
       end
@@ -160,7 +165,7 @@ function rect(x, y, radius)
    return coroutine.wrap(iter)
 end
 
-function fovRect(x, y, radius)
+function fovCircle(x, y, radius)
    tcodMap:computeFov(x, y, radius+1, true, tcod.FOV_PERMISSIVE_8)
    local function iter()
       for x1, y1, tile in rect(x, y, radius) do

@@ -22,7 +22,7 @@ function createWorld()
    world:placeOnMap(0, 0)
    world:print()
    map.sectors = world.sectors
-   return sectors[1]:getStartingPoint()
+   return sectors[3]:getStartingPoint()
 end
 
 Sector = class.Object:subclass {
@@ -115,7 +115,7 @@ RatCaves = Sector:subclass {
    itemsLevel = 1,
 
    nMonsters = 20,
-   monsters = {mob.Rat, mob.GiantRat},
+   monsters = {mob.Rat, mob.GiantRat, mob.GlowingFungus},
 }
 
 function RatCaves:init()
@@ -130,6 +130,8 @@ end
 
 Marketplace = Sector:subclass {
    name = 'Dwarftown Marketplace',
+   nMonsters = 5,
+   monsters = {mob.Rat, mob.Goblin},
 }
 
 function Marketplace:init()
@@ -221,7 +223,10 @@ function Graveyard:init()
    local mainRoom = mapgen.Room:make {
       wall = map.MarbleWall,
    }
-   mainRoom:setRect(1, 1, CELL_W*3-1, CELL_H*3-1, mainRoom.floor)
+   local mw = CELL_W*3 - 1
+   local mh = CELL_H*3 - 1
+   mainRoom:setRect(1, 1, mw, mh, mainRoom.floor)
+   mainRoom:get(math.floor(mw/2), math.floor(mh/2)).mob = mob.GoblinNecro:make()
    mainRoom:addWalls()
 
    local wCenter = math.floor(wCells/2-2)
@@ -233,6 +238,9 @@ end
 
 Square = Sector:subclass {
    name = 'Dwarftown Square',
+
+   nMonsters = 30,
+   monsters = {mob.Ogre, mob.Goblin},
 }
 
 function Square:init()

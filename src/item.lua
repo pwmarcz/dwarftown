@@ -162,35 +162,64 @@ EmptyBottle = Item:subclass {
    level = 1,
 }
 
-PotionHealth = Item:subclass {
+Potion = Item:subclass {
+   exclude = true,
+}
+
+function Potion:onUse(player)
+   ui.message('You drink %s.', self.descr_the)
+   self:onDrink(player)
+   player:destroyItem(self)
+end
+
+PotionHealth = Potion:subclass {
    glyph = {'!', C.green},
    name = 'potion of health',
 
    level = 1,
+
+   onDrink =
+      function(self, player)
+         player.hp = player.hp + math.floor(player.maxHp/2)
+         player.hp = math.min(player.hp, player.maxHp)
+      end,
 }
 
-function PotionHealth:onUse(player)
-   ui.message('You drink %s. You feel healed.', self.descr_the)
-   player.hp = player.hp + math.floor(player.maxHp/2)
-   player.hp = math.min(player.hp, player.maxHp)
-   player:destroyItem(self)
-end
+BoostingPotion = Potion:subclass {
+   exclude = true,
+   onDrink =
+      function(self, player)
+         player:addBoost(self.boost, self.boostTurns)
+      end
+}
 
-PotionNightVision = Item:subclass {
+PotionNightVision = BoostingPotion:subclass {
    glyph = {'!', C.yellow},
    name = 'potion of night vision',
 
-   boost = 50,
+   boost = 'nightVision',
+   boostTurns = 50,
    level = 3,
 }
 
-function PotionNightVision:onUse(player)
-   ui.message(
-      'You drink %s.',
-      self.descr_the)
-   player:addNightVisionBoost(self.boost)
-   player:destroyItem(self)
-end
+PotionSpeed = BoostingPotion:subclass {
+   glyph = {'!', C.blue},
+   name = 'potion of speed',
+
+   boost = 'speed',
+   boostTurns = 50,
+   level = 4,
+}
+
+PotionStrength = BoostingPotion:subclass {
+   glyph = {'!', C.red},
+   name = 'potion of strength',
+
+   boost = 'strength',
+   boostTurns = 50,
+   level = 4,
+}
+
 
 Stone = Item:subclass {
    glyph = {'*', C.darkGrey},
