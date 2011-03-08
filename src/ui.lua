@@ -361,21 +361,24 @@ function screenshot()
    tcod.system.saveScreenshot(nil)
 end
 
---[[
+---[[
 function mapScreenshot()
-   local con = tcod.Console(20,20)--map.WIDTH, map.HEIGHT)
+   local con = tcod.Console(map.WIDTH, map.HEIGHT)
+   con:clear()
+   ---[[
    for x = 0, map.WIDTH-1 do
       for y = 0, map.HEIGHT-1 do
          local tile = map.get(x, y)
          if not tile.empty then
             local char, color = tileAppearance(tile)
-            con:putCharEx(x, y, char, color,
-                          C.black)
+            con:putCharEx(x, y, char, color, C.black)
          end
       end
    end
+   --]]
    local image = tcod.Image(con)
-   image:refreshConsole(con)
+   print(con:getWidth(), con:getHeight())
+   --image:refreshConsole(con)
    image:save('map.png')
 end
 --]]

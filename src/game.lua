@@ -84,6 +84,7 @@ function mainLoop()
          done = true
       end
    end
+   tcod.console.flush()
 end
 
 -- Returns true if player spent a turn
