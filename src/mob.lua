@@ -172,6 +172,7 @@ end
 function Player:changeLightRadius(a)
    local x, y = self.x, self.y
    self:remove()
+
    self.lightRadius = self.lightRadius + a
    self:putAt(x, y)
 end
@@ -267,8 +268,9 @@ function Player:putAt(x, y)
 end
 
 function Player:remove()
-   map.eraseFov(self.x, self.y, self.fovRadiusLight)
+   local x, y = self.x, self.y
    Mob.remove(self)
+   map.eraseFov(x, y, self.fovRadiusLight)
 end
 
 function Player:receiveDamage(damage, from)

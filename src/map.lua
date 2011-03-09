@@ -90,13 +90,16 @@ function dig(x, y)
    end
 end
 
-function eraseFov()
-   for x1,y1,tile in rect(player.x, player.y, player.fovRadiusLight)
+function eraseFov(x, y, radiusLight)
+   x = x or player.x
+   y = y or player.y
+   radiusLight = radiusLight or player.fovRadiusLight
+   for x1,y1,tile in rect(x, y, radiusLight)
    do
       if tile.inFov then
          if tile.visible then
             tile.visible = false
-            tile.memLight = map.getLight(x1, y1, player.x, player.y)
+            tile.memLight = map.getLight(x1, y1, x, y)
             tile.memGlyph = tile:getTileGlyph()
          end
          tile.inFov = false
@@ -104,8 +107,9 @@ function eraseFov()
    end
 end
 
-function computeFov()
-   local x, y = player.x, player.y
+function computeFov(x, y)
+   x = x or player.x
+   y = y or player.y
    local radiusLight, radiusDark = player.fovRadiusLight, player.fovRadiusDark
    tcodMap:computeFov(x, y, radiusLight)
    for x1,y1,tile,d in fovCircle(x, y, radiusLight) do

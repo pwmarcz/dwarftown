@@ -67,6 +67,19 @@ Weapon = Item:subclass {
    slot = 'weapon',
 }
 
+function Weapon:init()
+   if dice.getInt(1, 6) == 1 then
+      local a, b, c = unpack(self.attackDice)
+      if dice.getInt(1, 20) == 1 then
+         a = a + 2
+      else
+         b = b + dice.getInt(-1, 1)
+         c = c + dice.getInt(-1, 3)
+      end
+      self.attackDice = {a, b, c}
+   end
+end
+
 function Weapon._get:descr()
    return ('%s (%s)'):format(
       Item._get.descr(self),
@@ -131,6 +144,12 @@ Armor = Item:subclass {
    armor = 0,
    exclude = true
 }
+
+function Armor:init()
+   if dice.getInt(1, 20) == 1 then
+      self.armor = self.armor + dice.getInt(-2, 3)
+   end
+end
 
 function Armor._get:descr()
    return ('%s [+%d]'):format(
@@ -219,7 +238,6 @@ PotionStrength = BoostingPotion:subclass {
    boostTurns = 50,
    level = 4,
 }
-
 
 Stone = Item:subclass {
    glyph = {'*', C.darkGrey},
