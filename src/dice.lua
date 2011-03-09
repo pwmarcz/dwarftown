@@ -8,6 +8,11 @@ function getInt(a, b)
    return gen:getInt(a, b)
 end
 
+-- +1 or -1
+function getSign()
+   return gen:getInt(0, 1)*2 - 1
+end
+
 function getFloat(a, b)
    return gen:getFloat(a, b)
 end

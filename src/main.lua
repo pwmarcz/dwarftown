@@ -2,15 +2,13 @@ package.path = package.path .. ';src/?.lua;src/?/init.lua;wrapper/?.lua'
 
 require 'game'
 require 'mapgen'
-require 'mapgen.tetris'
-require 'mapgen.cell'
+require 'mapgen.tree'
 
 local args = {...}
 
 function main()
    if args[1] == 'mapgen' then
-      mapgen.tetris.test()
-      mapgen.cell.test()
+      mapgen.tree.test()
    else
       if args[1] == 'wizard' then
          game.wizard = true

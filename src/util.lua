@@ -1,9 +1,19 @@
 module('util', package.seeall)
 
 dirs = {
-   {-1,-1}, {-1,0}, {-1,1},
-   {0,-1}, {0,1},
-   {1,-1}, {1,0}, {1,1}
+   {-1,-1}, {0,-1}, {1,-1},
+
+   {1, 0}, {1, 1}, {0, 1},
+   {-1, 1}, {-1, 0},
+
+   -- indexes
+   nw = 1, n = 2, ne = 3,
+   e = 4, se = 5, s = 6,
+   sw = 7, w = 8,
+
+   add = function(dir, a)
+            return 1 + (dir+a-1)%8
+         end
 }
 
 function randomDir()
