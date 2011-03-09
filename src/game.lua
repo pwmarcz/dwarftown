@@ -50,6 +50,7 @@ function init()
    table.insert(player.items, item.PotionSpeed:make())
    table.insert(player.items, item.PotionSpeed:make())
    table.insert(player.items, item.PotionStrength:make())
+   table.insert(player.items, item.ArtifactWeapon:make())
 
    map.player = player
    player:putAt(x, y)
@@ -73,14 +74,13 @@ function mainLoop()
       end
       if player.dead then
          if game.wizard then
-            if ui.prompt({'y', 'n'}, C.green, 'Die? [yn]') == 'n' then
+            if not ui.promptYN('Die? [yn]') then
                player.hp = player.maxHp
                player.dead = false
             end
          end
          if player.dead then
-            ui.prompt({K.ENTER, K.KPENTER}, C.green,
-                      '[Game over. Press ENTER]')
+            ui.promptEnter('[Game over. Press ENTER]')
             done = true
          end
       elseif player.leaving then
@@ -125,7 +125,7 @@ function command.walk(dx, dy)
 end
 
 function command.quit()
-   if ui.prompt({'y', 'n'}, C.green, 'Quit? [yn]') == 'y' then
+   if ui.promptYN('Quit? [yn]') then
       done = true
    end
 end

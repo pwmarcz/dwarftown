@@ -137,6 +137,8 @@ Player = Mob:subclass {
    --attackDice = {1,3,1},
 
    maxItems = 10,
+
+   nArtifacts = 0,
 }
 
 function Player:init()
@@ -204,7 +206,7 @@ end
 function Player:attack(dx, dy)
    local m = map.get(self.x+dx, self.y+dy).mob
    if not m.hostile then
-      if ui.prompt({'y', 'n'}, C.green, 'Attack %s? [yn]', m.descr_the) == 'n' then
+      if not ui.promptYN('Attack %s? [yn]', m.descr_the) then
          self:refundEnergy()
          return
       end
@@ -214,7 +216,7 @@ end
 
 function Player:walk(dx, dy)
    if map.get(self.x+dx, self.y+dy).exit then
-      if ui.prompt({'y', 'n'}, C.green, 'Leave? This will end the game. [yn]') == 'y' then
+      if ui.promptYN('Leave? This will end the game. [yn]') then
          self.leaving = true
       end
    else
@@ -281,24 +283,38 @@ function Player:receiveDamage(damage, from)
    end
 end
 
-function Player:pickUp(item)
+function Player:pickUp(it)
    if #self.items > self.maxItems then
       ui.message('Your backpack is full!')
       self:refundEnergy()
    else
-      ui.message('You pick up %s.', item.descr_the)
-      self.tile:removeItem(item)
-      table.insert(self.items, item)
+      ui.message('You pick up %s.', it.descr_the)
+      self.tile:removeItem(it)
+      table.insert(self.items, it)
+
+      if it.artifact then
+         self.nArtifacts = self.nArtifacts + 1
+
+         if self.nArtifacts == item.N_ARTIFACTS then
+            ui.promptEnter('You have found the artifacts. ' ..
+                           'Leave the Forest with them to win the game. ' ..
+                           'Press ENTER')
+         end
+      end
    end
 end
 
-function Player:drop(item)
-   if item.equipped then
-      unequip(item)
+function Player:drop(it)
+   if it.equipped then
+      unequip(it)
    end
-   ui.message('You drop %s.', item.descr_the)
-   util.delete(self.items, item)
-   self.tile:addItem(item)
+   ui.message('You drop %s.', it.descr_the)
+   util.delete(self.items, it)
+   self.tile:addItem(it)
+
+   if it.artifact then
+      self.nArtifacts = self.nArtifacts - 1
+   end
 end
 
 function Player:use(item)
@@ -390,6 +406,9 @@ Monster = Mob:subclass {
    hostile = true,
    level = 1,
 
+   -- probability of dropping an item
+   dropRate = 0,
+
    wanders = true
 }
 
@@ -409,8 +428,11 @@ function Monster:receiveDamage(damage, from)
 end
 
 function Monster:die()
-   Mob.die(self)
+   if dice.getFloat(0, 1) < self.dropRate then
+      self.tile:addItem(dice.choiceEx(item.Item.all, self.level):make())
+   end
    self:remove()
+   Mob.die(self)
 end
 
 function Monster:onAttack(mob, damage)
@@ -616,6 +638,8 @@ Goblin = Monster:subclass {
 
    maxHp = 10,
    level = 2,
+
+   dropRate = 0.1,
 }
 
 Ogre = Monster:subclass {
@@ -629,6 +653,7 @@ Ogre = Monster:subclass {
    level = 4,
 
    freq = 0.5,
+   dropRate = 0.2,
 }
 
 GoblinNecro = Monster:subclass {
@@ -648,3 +673,8 @@ GoblinNecro = Monster:subclass {
 
    exclude = true,
 }
+
+function GoblinNecro:die()
+   self.tile:addItem(item.ArtifactWeapon:make())
+   Monster.die(self)
+end

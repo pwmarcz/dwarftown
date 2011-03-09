@@ -92,6 +92,14 @@ function prompt(keys, ...)
    end
 end
 
+function promptYN(...)
+   return prompt({'y', 'n'}, C.green, ...) == 'y'
+end
+
+function promptEnter(...)
+   prompt({tcod.k.ENTER, tcod.k.KPENTER}, C.green, ...)
+end
+
 function promptItems(items, ...)
    update()
    local text = string.format(...)
@@ -100,18 +108,24 @@ function promptItems(items, ...)
    itemConsole:print(0, 0, text)
 
    local letter = ord('a')
-   for i, item in ipairs(items) do
+   for i, it in ipairs(items) do
       local s
-      if item.equipped then
-         itemConsole:setDefaultForeground(C.white)
-         s = ('%c *   %s'):format(letter+i-1, item.descr)
+      local color
+      if it.artifact then
+         color = C.lightGreen
       else
-         itemConsole:setDefaultForeground(C.lightGrey)
-         s = ('%c     %s'):format(letter+i-1, item.descr)
+         color = C.white
       end
+      if it.equipped then
+         s = ('%c *   %s'):format(letter+i-1, it.descr)
+      else
+         color = color * 0.7
+         s = ('%c     %s'):format(letter+i-1, it.descr)
+      end
+      itemConsole:setDefaultForeground(color)
       itemConsole:print(0, i+1, s)
 
-      local char, color = glyph(item.glyph)
+      local char, color = glyph(it.glyph)
       itemConsole:putCharEx(4, i+1, char, color,
                             C.black)
    end

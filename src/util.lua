@@ -54,12 +54,10 @@ function descr_a(s)
 end
 
 function descr_the(s)
-   c = s:sub(1,1)
-   if c:match('%u') then
-      return s
-   else
-      return 'the ' .. s
-   end
+   --c = s:sub(1,1)
+   --if c:match('%u') then
+   -- return s
+   return 'the ' .. s
 end
 
 function delete(t, e)

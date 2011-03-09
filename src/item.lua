@@ -68,6 +68,9 @@ Weapon = Item:subclass {
 }
 
 function Weapon:init()
+   if self.artifact then
+      return
+   end
    if dice.getInt(1, 6) == 1 then
       local a, b, c = unpack(self.attackDice)
       if dice.getInt(1, 20) == 1 then
@@ -146,6 +149,9 @@ Armor = Item:subclass {
 }
 
 function Armor:init()
+   if self.artifact then
+      return
+   end
    if dice.getInt(1, 20) == 1 then
       self.armor = self.armor + dice.getInt(-2, 3)
    end
@@ -244,3 +250,24 @@ Stone = Item:subclass {
    name = 'stone',
    exclude = true,
 }
+
+ArtifactWeapon = Weapon:subclass {
+   glyph = {'(', C.lighterBlue},
+   name = 'Axe of Thorgrim',
+
+   attackDice = {2, 10, 2},
+   exclude = true,
+   artifact = true,
+}
+
+ArtifactHelmet = Armor:subclass {
+   glyph = {'[', C.lighterBlue},
+   name = 'Helmet of Dwarven Kings',
+   slot = 'helmet',
+
+   armor = 5,
+   exclude = true,
+   artifact = true,
+}
+
+N_ARTIFACTS = 1
