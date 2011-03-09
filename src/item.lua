@@ -223,7 +223,7 @@ PotionNightVision = BoostingPotion:subclass {
    name = 'potion of night vision',
 
    boost = 'nightVision',
-   boostTurns = 50,
+   boostTurns = 500,
    level = 3,
 }
 

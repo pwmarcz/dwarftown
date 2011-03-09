@@ -296,9 +296,9 @@ function Player:pickUp(it)
          self.nArtifacts = self.nArtifacts + 1
 
          if self.nArtifacts == item.N_ARTIFACTS then
-            ui.promptEnter('You have found the artifacts. ' ..
+            ui.promptEnter('[You have found the artifacts. ' ..
                            'Leave the Forest with them to win the game. ' ..
-                           'Press ENTER')
+                           'Press ENTER]')
          end
       end
    end
@@ -481,6 +481,7 @@ function Monster:act()
    elseif not self.wanders then
       -- non-wandering monsters stop when they don't see player
       self:wait()
+      return
    end
 
    -- last known position?
@@ -528,7 +529,7 @@ GlowingFungus = Monster:subclass {
    maxHp = 3,
    attackDice = {0, 0, 0},
 
-   freq = 0.1,
+   freq = 0.5,
 
    lightRadius = 4,
 }

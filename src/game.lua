@@ -7,6 +7,7 @@ require 'map'
 require 'mob'
 require 'item'
 require 'mapgen.world'
+require 'text'
 
 local K = tcod.k
 local C = tcod.color
@@ -21,6 +22,7 @@ local keybindings = {
    [{'b', '1', K.KP1}] = {'walk', {-1, 1}},
    [{'j', '2', K.KP2, K.DOWN}] = {'walk', {0, 1}},
    [{'n', '3', K.KP3}] = {'walk', {1, 1}},
+
    [{'g', ','}] = 'pickUp',
    [{'d'}] = 'drop',
    [{'i'}] = 'inventory',
@@ -28,7 +30,7 @@ local keybindings = {
    [{'q', K.ESCAPE}] = 'quit',
    [{'?'}] = 'help',
    [{K.F11}] = 'screenshot',
-   [{K.F12}] = 'mapScreenshot',
+   --[{K.F12}] = 'mapScreenshot',
 }
 
 player = nil
@@ -41,7 +43,10 @@ function init()
    ui.init()
    map.init()
 
+   ui.drawScreen(text.getLoadingScreen())
    local x, y = mapgen.world.createWorld()
+   ui.drawScreen(text.getTitleScreen())
+   tcod.console.waitForKeypress(true)
 
    player = mob.Player:make()
    table.insert(player.items, item.Torch:make())

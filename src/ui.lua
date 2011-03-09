@@ -3,6 +3,7 @@ module('ui', package.seeall)
 require 'tcod'
 require 'map'
 require 'util'
+require 'text'
 
 local C = tcod.color
 
@@ -372,24 +373,10 @@ function describeTile(tile)
    end
 end
 
-local helpText = [[
---- Dwarftown ---
-
-bla bla bla
-
---- Keybindings ---
-
-Move:  numpad,             Inventory:    i
-       arrow keys,         Pick up:      g, ,
-       yuhjklbn            Drop:         d
-Wait:  5, .                Quit:         q, Esc
-Look:  x                   Help:  ?
-]]
-
 function help()
    rootConsole:clear()
    rootConsole:setDefaultForeground(C.lighterGrey)
-   rootConsole:print(1, 1, helpText)
+   rootConsole:print(1, 1, text.helpText)
    tcod.console.flush()
    tcod.console.waitForKeypress(true)
 end
@@ -420,3 +407,19 @@ function mapScreenshot()
    image:save('map.png')
 end
 --]]
+
+function drawScreen(sc)
+   rootConsole:clear()
+   local start = math.floor((SCREEN_H-#sc-1)/2)
+   local center = math.floor(SCREEN_W/2)
+   for i, line in ipairs(sc) do
+      if type(line) == 'table' then
+         local color
+         color, line = unpack(line)
+         rootConsole:setDefaultForeground(color)
+      end
+      rootConsole:printEx(center, start+i-1, tcod.BKGND_SET, tcod.CENTER,
+                          line)
+   end
+   tcod.console.flush()
+end

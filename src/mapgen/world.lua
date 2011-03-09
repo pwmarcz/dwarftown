@@ -3,7 +3,10 @@ module('mapgen.world', package.seeall)
 require 'mapgen'
 require 'mapgen.cell'
 require 'mapgen.tetris'
+require 'mapgen.tree'
 require 'dice'
+require 'map'
+require 'util'
 
 local world
 
@@ -12,18 +15,40 @@ function createWorld()
    world = mapgen.Room:make {
       sectors = {}
    }
-   local sectors = {Square, Marketplace, Graveyard, RatCaves, Forest}
-   for i = 1, #sectors do
-      sectors[i] = sectors[i]:place(10, 35*(i-1), 50, 30)
+
+   local sectors = {
+      g = Graveyard,
+      s = Square,
+      M = Mines,
+      m = Marketplace,
+      r = RatCaves,
+      f = Forest,
+   }
+
+   local chart = {
+      {false, 'g', false},
+      {'M', 's', 'm'},
+      {false, 'r'},
+      {false, 'f'},
+   }
+   local W, H = 70, 40
+   for j, row in ipairs(chart) do
+      for i, k in ipairs(row) do
+         if k then
+            local x = (W+3)*(i-1)
+            local y = (H+3)*(j-1)
+            sectors[k] = sectors[k]:place(x, y, W, H)
+         end
+      end
    end
 
    --world:addWalls()
-   print('Connecting')
+   --print('Connecting')
    world:floodConnect()
-   world:placeOnMap(0, 0)
    world:print()
+   world:placeOnMap(0, 0)
    map.sectors = world.sectors
-   return sectors[3]:getStartingPoint()
+   return sectors['M']:getStartingPoint()
 end
 
 Sector = class.Object:subclass {
@@ -59,7 +84,7 @@ Forest = Sector:subclass {
 
    roadH = 10,
 
-   nMonsters = 10,
+   nMonsters = 20,
    monsters = {mob.Bear, mob.Squirrel},
 }
 
@@ -93,7 +118,7 @@ function Forest:init()
    self.room:floodConnect()
 
    for x = 1, self.w - 1 do
-      local tile = self.room:get(x, self.h - self.roadH + 6)
+      local tile = self.room:get(x, self.h - self.roadH + 7)
       if not tile.empty then
          tile.exit = true
       end
@@ -101,7 +126,7 @@ function Forest:init()
 end
 
 function Forest:getStartingPoint()
-   local x, y = self.room:findEmptyTile(1, self.h - self.roadH-4, self.w, 4)
+   local x, y = self.room:findEmptyTile(1, self.h - self.roadH + 3, self.w, 2)
    return x + self.x, y + self.y
 end
 
@@ -184,11 +209,9 @@ function makeShop(w, h)
    }
    room:setRect(1, 1, w, h, room.floor)
    room:addWalls()
-   local a = dice.getInt(1, 4)
-   if a == 1 then
-      room:set(math.floor(w/2), 0, map.Lamp)
-   elseif a == 2 then
-      room:set(math.floor(w/2), h+1, map.Lamp)
+   if dice.getInt(1, 2) == 1 then
+      local x, y = mapgen.randomWallCenter(1, 1, w, h)
+      room:set(x, y, map.Lamp)
    end
    if dice.getInt(1, 2) == 1 then
       -- put some items
@@ -257,6 +280,8 @@ function Square:init()
          local h = dice.getInt(6, 9)
          room:setRect(1, 1, w, h, self.room.floor)
          room:setEmptyRect(2, 2, w-1, h-1, room.wall)
+         local x, y = mapgen.randomWallCenter(2,2,w-1,h-1)
+         room:set(x, y, map.Lamp)
          return room
       end,
       false)
@@ -270,4 +295,21 @@ function Square:init()
    self.room:addWalls()
    self.room:floodConnect()
    placeCaveIns(self.room, 4)
+end
+
+Mines = Sector:subclass {
+   name = 'Dwarftown Mines',
+
+   nMonsters = 30,
+   monsters = {mob.Ogre, mob.Goblin},
+}
+
+function Mines:init()
+   self.room = mapgen.Room:make {
+      wall = map.Stone,
+   }
+   mapgen.tree.makeTree(self.room, self.w, self.h,
+                        self.w-3, math.floor(self.h/2),
+                        util.dirs.w)
+   self.room:addWalls()
 end

@@ -43,6 +43,21 @@ function Room:setRect(x, y, w, h, tcls)
    end
 end
 
+function randomWallCenter(x, y, w, h)
+   local w1 = math.floor(w/2)
+   local h1 = math.floor(h/2)
+   local roll = dice.getInt(1, 4)
+   if roll == 1 then
+      return x, y+h1
+   elseif roll == 2 then
+      return x+w-1, y+h1
+   elseif roll == 3 then
+      return x+w1, y
+   else
+      return x+w1, y+h-1
+   end
+end
+
 function Room:setEmptyRect(x, y, w, h, tcls)
    --print(x,y,w,h)
    for x1 = x, x+w-1 do
