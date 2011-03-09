@@ -163,13 +163,17 @@ function Room:canPlaceIn(room2, x, y, ignoreWalls)
    return true
 end
 
-function Room:placeIn(room, x, y)
+function Room:placeIn(room, x, y, ignoreWalls)
    for x1 = 0, self.w-1 do
       for y1 = 0, self.h-1 do
          local tile = self:get(x1, y1)
          local tile2 = room:get(x+x1, y+y1)
          if not tile.empty then
-            room:set(x+x1, y+y1, tile)
+            if tile2.empty or
+               (tile2.type == '#' and not ignoreWalls)
+            then
+               room:set(x+x1, y+y1, tile)
+            end
          end
       end
    end

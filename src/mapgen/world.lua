@@ -18,6 +18,7 @@ function createWorld()
    end
 
    --world:addWalls()
+   print('Connecting')
    world:floodConnect()
    world:placeOnMap(0, 0)
    world:print()
@@ -34,6 +35,7 @@ Sector = class.Object:subclass {
 }
 
 function Sector:place(x, y, w, h)
+   print('Building ' .. self.name)
    local sector = self:make { x = x, y = y, w = w, h = h }
    if sector.nItems > 0 then
       sector.room:addItems(sector.nItems, sector.itemsLevel)

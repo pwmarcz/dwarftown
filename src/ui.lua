@@ -269,14 +269,20 @@ function tileAppearance(tile)
 end
 
 function look()
+   -- on-screen center
    local xc = math.floor(VIEW_W/2)
    local yc = math.floor(VIEW_H/2)
+   -- on-map center
+   local xPos, yPos = map.player.x, map.player.y
+   -- on-screen cursor position
    local xv, yv = xc, yc
 
    local savedMessages = messages
    messages = {}
 
-   ui.message('Look mode: use movement keys to look, any other key to exit.')
+   ui.message('Look mode: use movement keys to look, ' ..
+              'Alt-movement to jump, ' ..
+              'Esc/q to exit.')
    ui.message('')
    local messagesLevel = #messages
    while true do
@@ -291,7 +297,7 @@ function look()
       viewConsole:putCharEx(xv, yv, char, C.black, color)
 
       -- Describe position
-      local x, y = xv - xc + map.player.x, yv - yc + map.player.y
+      local x, y = xv - xc + xPos, yv - yc + yPos
       describeTile(map.get(x, y))
 
       blitConsoles()
@@ -307,9 +313,26 @@ function look()
       local cmd = game.getCommand(key)
       if type(cmd) == 'table' and cmd[1] == 'walk' then
          local dx, dy = unpack(cmd[2])
-         if 0 <= xv+dx and xv+dx < VIEW_W and 0 <= yv+dy and yv+dy < VIEW_H then
-            xv, yv = xv+dx, yv+dy
+
+         if key.lalt or key.ralt then
+            dx, dy = dx*10, dy*10
          end
+
+         if 0 <= xv+dx and xv+dx < VIEW_W and
+            0 <= yv+dy and yv+dy < VIEW_H
+         then
+            xv, yv = xv+dx, yv+dy
+         else -- try to scroll instead of moving the cursor
+            if 0 <= xPos+dx and xPos+dx < map.WIDTH and
+               0 <= yPos+dy and yPos+dy < map.HEIGHT
+            then
+               xPos = xPos + dx
+               yPos = yPos + dy
+               drawMap(xPos, yPos)
+            end
+
+         end
+
       elseif cmd == 'quit' then
          break
       end

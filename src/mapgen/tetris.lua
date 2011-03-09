@@ -62,7 +62,7 @@ function makeTetrisDungeon(dungeon, wCells, hCells)
       local x, y = i*CELL_W, j*CELL_H
       if room:canPlaceIn(dungeon, x, y, true) then
          room = room:deepCopy()
-         room:placeIn(dungeon, x, y)
+         room:placeIn(dungeon, x, y, true)
          --print(_)
          --dungeon:print()
       end
