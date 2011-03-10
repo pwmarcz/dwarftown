@@ -139,7 +139,7 @@ Dagger = Weapon:subclass {
    glyph = {'(', C.lightGrey},
    name = 'dagger',
 
-   attackDice = {1, 4, 0},
+   attackDice = {1, 4, 1},
    level = 1,
 }
 

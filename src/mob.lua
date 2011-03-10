@@ -346,7 +346,7 @@ end
 
 function Player:drop(it)
    if it.equipped then
-      unequip(it)
+      self:unequip(it)
    end
    ui.message('You drop %s.', it.descr_the)
    util.delete(self.items, it)
