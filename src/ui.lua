@@ -120,7 +120,7 @@ function promptItems(items, ...)
       if it.equipped then
          s = ('%c *   %s'):format(letter+i-1, it.descr)
       else
-         color = color * 0.7
+         color = color * 0.5
          s = ('%c     %s'):format(letter+i-1, it.descr)
       end
       itemConsole:setDefaultForeground(color)

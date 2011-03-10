@@ -13,7 +13,7 @@ local world
 -- Makes full game world, returns player x, y
 function createWorld()
    world = mapgen.Room:make {
-      sectors = {}
+      sectors = {},
    }
 
    local sectors = {
@@ -43,12 +43,12 @@ function createWorld()
    end
 
    --world:addWalls()
-   --print('Connecting')
+   print('Connecting')
    world:floodConnect()
-   world:print()
+   --world:print()
    world:placeOnMap(0, 0)
    map.sectors = world.sectors
-   return sectors['M']:getStartingPoint()
+   return sectors['f']:getStartingPoint()
 end
 
 Sector = class.Object:subclass {
@@ -79,10 +79,11 @@ function Sector:getStartingPoint()
    return x + self.x, y + self.y
 end
 
+-- Forest is actually bigger: there are roadH road tiles on the bottom
 Forest = Sector:subclass {
    name = 'Forest',
 
-   roadH = 10,
+   roadH = 25,
 
    nMonsters = 20,
    monsters = {mob.Bear, mob.Squirrel},
@@ -90,14 +91,14 @@ Forest = Sector:subclass {
 
 function Forest:init()
    self.room = mapgen.Room:make {
-      w = self.w, h = self.h - self.roadH,
+      w = self.w, h = self.h,
       floor = map.Grass,
       wall = map.TallTree,
    }
    self.room = mapgen.cell.makeCellRoom(self.room, true)
 
    local xc = math.floor(self.w/2)
-   for y = self.h - self.roadH - 3, self.h - 1 do
+   for y = self.h - 3, self.h + self.roadH - 1 do
       local d = dice.getInt(-1, 1)
       for x = xc - 3 + d, xc + 3 + d do
          tile = self.room.floor:make()
@@ -105,7 +106,7 @@ function Forest:init()
       end
    end
 
-   if dice.getInt(1, 1) == 1 then
+   if dice.getInt(1, 5) == 1 then
       local w = math.floor(self.w/3)
       local lake = makeLake(w, math.floor(2*w/3))
       --lake:print()
@@ -118,7 +119,7 @@ function Forest:init()
    self.room:floodConnect()
 
    for x = 1, self.w - 1 do
-      local tile = self.room:get(x, self.h - self.roadH + 7)
+      local tile = self.room:get(x, self.h + 7)
       if not tile.empty then
          tile.exit = true
       end
@@ -126,7 +127,7 @@ function Forest:init()
 end
 
 function Forest:getStartingPoint()
-   local x, y = self.room:findEmptyTile(1, self.h - self.roadH + 3, self.w, 2)
+   local x, y = self.room:findEmptyTile(1, self.h + 2, self.w, 4)
    return x + self.x, y + self.y
 end
 
@@ -139,10 +140,10 @@ end
 RatCaves = Sector:subclass {
    name = 'Rat Caves',
    nItems = 10,
-   itemsLevel = 1,
+   itemsLevel = 2,
 
-   nMonsters = 20,
-   monsters = {mob.Rat, mob.GiantRat, mob.GlowingFungus},
+   nMonsters = 25,
+   monsters = {mob.Rat, mob.GiantRat, mob.Bat, mob.GlowingFungus},
 }
 
 function RatCaves:init()
@@ -159,6 +160,8 @@ Marketplace = Sector:subclass {
    name = 'Dwarftown Marketplace',
    nMonsters = 5,
    monsters = {mob.Rat, mob.Goblin},
+
+   itemsLevel = 3,
 }
 
 function Marketplace:init()
@@ -170,10 +173,10 @@ function Marketplace:init()
       function()
          local w1 = dice.getInt(5, 7)
          local h1 = dice.getInt(3, 6)
-         return makeShop(w1, h1)
+         return makeShop(w1, h1, self.itemsLevel)
       end,
       false)
-   self.room:floodConnect()
+   self.room:floodConnect('mixed')
    placeCaveIns(self.room, 10)
 end
 
@@ -203,14 +206,14 @@ function placeCaveIns(room, n)
    room:floodConnect()
 end
 
-function makeShop(w, h)
+function makeShop(w, h, itemsLevel)
    local room = mapgen.Room:make {
       wall = map.Wall,
    }
    room:setRect(1, 1, w, h, room.floor)
    room:addWalls()
    if dice.getInt(1, 2) == 1 then
-      local x, y = mapgen.randomWallCenter(1, 1, w, h)
+      local x, y = mapgen.randomWallCenter(0, 0, w+2, h+2)
       room:set(x, y, map.Lamp)
    end
    if dice.getInt(1, 2) == 1 then
@@ -220,9 +223,9 @@ function makeShop(w, h)
             a = dice.getInt(1, 50)
             if a < 10 then
                local it = dice.choiceEx(
-                  item.Item.all, 2):make()
+                  item.Item.all, itemsLevel):make()
                room:get(x, y):addItem(it)
-            elseif a == 50 then
+            elseif a < 15 then
                room:get(x, y).mob = mob.Mimic:make()
             end
          end
@@ -233,8 +236,8 @@ end
 
 Graveyard = Sector:subclass {
    name = 'Dwarftown Graveyard',
-   nMonsters = 10,
-   monsters = {mob.Spectre},
+   nMonsters = 35,
+   monsters = {mob.Spectre, mob.Wight, mob.Skeleton},
 }
 
 function Graveyard:init()
@@ -257,15 +260,33 @@ function Graveyard:init()
    local wCenter = math.floor(wCells/2-2)
    local hCenter = math.floor(hCells/2-2)
    mainRoom:placeIn(self.room, wCenter*CELL_W, hCenter*CELL_H)
-   self.room = mapgen.tetris.makeTetrisDungeon(self.room, wCells, hCells)
-   self.room:floodConnect()
+
+   local function prepare(room)
+      for x = 1, room.w-1 do
+         for y = 1, room.h-1 do
+            local tile = room:get(x, y)
+            if not tile.empty and tile.type == '.' then
+               if dice.getInt(1, 3) == 1 then
+                  room:set(x, y, map.Grave:make())
+               end
+            end
+         end
+      end
+   end
+   self.room = mapgen.tetris.makeTetrisDungeon(
+      self.room, wCells, hCells, prepare)
+   self.room:floodConnect('closed')
 end
 
 Square = Sector:subclass {
    name = 'Dwarftown Square',
 
-   nMonsters = 30,
+   --nMonsters = 30,
+   -- monsters placed manually indoors
    monsters = {mob.Ogre, mob.Goblin},
+
+   nItems = 15,
+   itemsLevel = 5,
 }
 
 function Square:init()
@@ -282,6 +303,16 @@ function Square:init()
          room:setEmptyRect(2, 2, w-1, h-1, room.wall)
          local x, y = mapgen.randomWallCenter(2,2,w-1,h-1)
          room:set(x, y, map.Lamp)
+         if dice.getInt(1, 2) == 1 then
+            -- add some monsters
+            for x = 3, w-2 do
+               for y = 3, h-2 do
+                  if dice.getInt(1, 2) == 1 then
+                     room:get(x, y).mob = dice.choiceEx(self.monsters):make()
+                  end
+               end
+            end
+         end
          return room
       end,
       false)
@@ -293,15 +324,18 @@ function Square:init()
       end
    end
    self.room:addWalls()
-   self.room:floodConnect()
+   self.room:floodConnect('mixed')
    placeCaveIns(self.room, 4)
 end
 
 Mines = Sector:subclass {
    name = 'Dwarftown Mines',
 
-   nMonsters = 30,
-   monsters = {mob.Ogre, mob.Goblin},
+   nMonsters = 60,
+   monsters = {mob.Ogre, mob.Goblin, mob.Bugbear, mob.KillerBat},
+
+   iItems = 20,
+   itemsLevel = 8,
 }
 
 function Mines:init()
@@ -311,5 +345,18 @@ function Mines:init()
    mapgen.tree.makeTree(self.room, self.w, self.h,
                         self.w-3, math.floor(self.h/2),
                         util.dirs.w)
+
    self.room:addWalls()
+
+   -- Now place boss in the left-most tile
+   for x = 1, self.w-1 do
+      for y = 1, self.h-1 do
+         local tile = self.room:get(x, y)
+         if not tile.empty and tile.type == '.' then
+            tile.mob = mob.GoblinKing:make()
+            return
+         end
+      end
+   end
+   assert(false)
 end

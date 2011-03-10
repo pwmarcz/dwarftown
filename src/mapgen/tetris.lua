@@ -53,7 +53,7 @@ function makeTetrominoRooms(wall, floor)
 end
 
 -- w, h - dimensions (in tetromino cells)
-function makeTetrisDungeon(dungeon, wCells, hCells)
+function makeTetrisDungeon(dungeon, wCells, hCells, prepareFunc)
    local rooms = makeTetrominoRooms(dungeon.wall, dungeon.floor)
    for _ = 1, 1000 do
       local room = dice.choice(rooms)
@@ -62,12 +62,13 @@ function makeTetrisDungeon(dungeon, wCells, hCells)
       local x, y = i*CELL_W, j*CELL_H
       if room:canPlaceIn(dungeon, x, y, true) then
          room = room:deepCopy()
-         room:placeIn(dungeon, x, y, true)
+         prepareFunc(room)
+         room:placeIn(dungeon, x, y, false)
          --print(_)
          --dungeon:print()
       end
    end
-   dungeon:floodConnect(true)
+   --dungeon:floodConnect(true)
    return dungeon
 end
 

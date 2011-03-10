@@ -15,7 +15,7 @@ Room = class.Object:subclass {
    h = 0,
 
    -- what tiles to use
-   wall = map.Wall,
+   wall = map.Stone,
    floor = map.Floor,
 }
 
@@ -184,9 +184,7 @@ function Room:placeIn(room, x, y, ignoreWalls)
          local tile = self:get(x1, y1)
          local tile2 = room:get(x+x1, y+y1)
          if not tile.empty then
-            if tile2.empty or
-               (tile2.type == '#' and not ignoreWalls)
-            then
+            if tile2.type ~= '#' or ignoreWalls then
                room:set(x+x1, y+y1, tile)
             end
          end
@@ -218,6 +216,9 @@ function Room:placeOnMap(x, y)
 end
 
 -- connect all room.points
+-- makeDoors: false - no doors
+--            'closed' - all closed doors
+--            'mixed' - closed and open doors
 function Room:connect(points, makeDoors)
    local callback = tcod.path.Callback(
       function(_, _, x, y) return self:walkCost(x, y) end)
@@ -238,8 +239,16 @@ function Room:connect(points, makeDoors)
          local c = self:get(x, y).type
          if c == '+' or c == '.' then
             -- pass
-         elseif c == '#' and last == '.' and makeDoors then
-            self:set(x, y, map.Door)
+         elseif c == '#' and last == '.' then
+            local tile
+            if makeDoors == 'closed' then
+               tile = map.Door:make{ open = false }
+            elseif makeDoors == 'mixed' then
+               tile = map.Door:make{ open = dice.getInt(1,2)==1 }
+            else
+               tile = self.floor
+            end
+            self:set(x, y, tile)
          else
             self:set(x, y, self.floor)
          end

@@ -26,6 +26,7 @@ local keybindings = {
    [{'g', ','}] = 'pickUp',
    [{'d'}] = 'drop',
    [{'i'}] = 'inventory',
+   [{'c'}] = 'close',
    [{'x', ';'}] = 'look',
    [{'q', K.ESCAPE}] = 'quit',
    [{'?'}] = 'help',
@@ -49,13 +50,24 @@ function init()
    tcod.console.waitForKeypress(true)
 
    player = mob.Player:make()
-   table.insert(player.items, item.Torch:make())
-   table.insert(player.items, item.PickAxe:make())
-   table.insert(player.items, item.PotionNightVision:make())
-   table.insert(player.items, item.PotionSpeed:make())
-   table.insert(player.items, item.PotionSpeed:make())
-   table.insert(player.items, item.PotionStrength:make())
-   table.insert(player.items, item.ArtifactWeapon:make())
+
+   local startingItems
+   if not wizard then
+      startingItems = {
+         item.Torch,
+         item.PotionHealing,
+      }
+   else
+      startingItems = {
+         item.PotionNightVision,
+         item.PickAxe,
+         item.Lamp,
+         item.ArtifactWeapon,
+      }
+   end
+   for _, icls in ipairs(startingItems) do
+      table.insert(player.items, icls:make())
+   end
 
    map.player = player
    player:putAt(x, y)
@@ -122,10 +134,40 @@ function command.walk(dx, dy)
       player:attack(dx, dy)
    elseif player:canWalk(dx, dy) then
       player:walk(dx, dy)
+   elseif player:canOpen(dx, dy) then
+      player:open(dx, dy)
    elseif player:canDig(dx, dy) then
       player:dig(dx, dy)
    else
       player:refundEnergy()
+   end
+end
+
+function command.close(dx, dy)
+   local dirs = {}
+   for _, d in ipairs(util.dirs) do
+      if player:canClose(d[1], d[2]) then
+         table.insert(dirs, d)
+      end
+   end
+   if #dirs == 0 then
+      ui.message('There is no door here you can close.')
+   elseif #dirs == 1 then
+      player:spendEnergy()
+      player:close(dirs[1][1], dirs[1][2])
+   else
+      ui.message('In what direction?')
+      ui.newTurn()
+      ui.update()
+      local key = tcod.console.waitForKeypress(true)
+      local cmd = getCommand(key)
+      if type(cmd) == 'table' and cmd[1] == 'walk' then
+         local dx, dy = unpack(cmd[2])
+         if player:canClose(dx, dy) then
+            player:spendEnergy()
+            player:close(dx, dy)
+         end
+      end
    end
 end
 

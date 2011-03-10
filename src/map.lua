@@ -31,6 +31,9 @@ end
 function removeMob(m)
    if m.lightRadius > 0 then
       computeLight(m.x, m.y, m.lightRadius, -1)
+      if not m.isPlayer then
+         player:recalcFov()
+      end
    end
    mobs[m] = nil
 end
@@ -57,8 +60,10 @@ function getSector(x1, y1)
    end
 end
 
-
 function get(x, y)
+   if x < 0 or x >= HEIGHT or y < 0 or y >= WIDTH then
+      return emptyTile
+   end
    return tiles[y*WIDTH + x] or emptyTile
 end
 
@@ -68,6 +73,9 @@ function updateProperties(x, y, tile)
 end
 
 function set(x, y, tile)
+   if x < 0 or x >= HEIGHT or y < 0 or y >= WIDTH then
+      return
+   end
    tiles[y*WIDTH + x] = tile
    updateProperties(x, y, tile)
 end
@@ -80,14 +88,62 @@ function canDig(x, y)
 end
 
 function dig(x, y)
-   set(x, y, Floor:make())
-   for x1 = x-1, x+1 do
-      for y1 = y-1, y+1 do
-         if get(x1, y1).empty then
-            set(x1, y1, Stone:make())
+   alterMap(x, y,
+            function()
+               set(x, y, Floor:make())
+               for x1 = x-1, x+1 do
+                  for y1 = y-1, y+1 do
+                     if get(x1, y1).empty then
+                        set(x1, y1, Stone:make())
+                     end
+                  end
+               end
+            end)
+end
+
+MAX_LIGHT_RADIUS = 20
+
+-- Alter map at x, y with function fun, updating the lighting.
+-- The function has to turn off and then on all the lights around the place.
+function alterMap(x, y, fun)
+   local lights = {}
+
+   local M = MAX_LIGHT_RADIUS
+
+   local function addLight(x, y, lightRadius)
+      table.insert(lights, {x, y, lightRadius})
+      computeLight(x, y, lightRadius, -1)
+   end
+   for x1 = x - M, x + M do
+      for y1 = y - M, y + M do
+         local tile = get(x1, y1)
+         if not tile.empty then
+            if tile.lightRadius then
+               addLight(x1, y1, tile.lightRadius)
+            end
+            if tile.mob and tile.mob.lightRadius then
+               addLight(x1, y1, tile.mob.lightRadius)
+            end
          end
       end
    end
+
+   fun()
+
+   for _, light in ipairs(lights) do
+      local x, y, lightRadius = unpack(light)
+      computeLight(x, y, lightRadius, 1)
+   end
+end
+
+function changeDoor(x, y, open)
+   local tile = get(x, y)
+
+   alterMap(x, y, function()
+                     tile.open = open
+                     tile:updateState()
+                     updateProperties(x, y, tile)
+                  end)
 end
 
 function eraseFov(x, y, radiusLight)
@@ -243,7 +299,12 @@ end
 function Tile:onPlayerEnter()
    if self.items then
       if #self.items == 1 then
-         ui.message('%s is lying here.', self.items[1].descr_a)
+         local it = self.items[1]
+         if it.plural then
+            ui.message('%s are lying here.', it.descr_a)
+         else
+            ui.message('%s is lying here.', it.descr_a)
+         end
       else
          ui.message('Several items are lying here.')
       end
@@ -282,17 +343,42 @@ Stone = Tile:subclass {
 
 
 Door = Tile:subclass {
-   glyph = {'^', C.darkerOrange},
+   glyphOpen = {'^', C.darkerOrange},
+   glyphClosed = {'+', C.darkerOrange},
+   open = false,
    type = '+',
-   name = 'door',
-   walkable = true,
-   transparent = true,
 }
+
+function Door:init()
+   self:updateState()
+end
+
+function Door:updateState()
+   if self.open then
+      self.glyph = self.glyphOpen
+      self.name = 'open door'
+      self.transparent = true
+      self.walkable = true
+   else
+      self.glyph = self.glyphClosed
+      self.name = 'closed door'
+      self.transparent = false
+      self.walkable = false
+   end
+end
 
 Floor = Tile:subclass {
    glyph = {'.', C.grey},
    type = '.',
    name = 'floor',
+   transparent = true,
+   walkable = true,
+}
+
+Grave = Tile:subclass {
+   glyph = {'+', C.darkGrey},
+   type = '.',
+   name = 'grave',
    transparent = true,
    walkable = true,
 }

@@ -16,11 +16,43 @@ Item = class.Object:subclass {
 util.addRegister(Item)
 
 function Item._get:descr()
-   return self.name
+   local s = self.name
+   if self.attackDice then
+      s = s .. (' (%s)'):format(dice.describe(self.attackDice))
+   end
+   if self.armor and self.armor ~= 0 then
+      s = s .. (' [%s]'):format(util.signedDescr(self.armor))
+   end
+   if self.speed and self.speed ~= 0 then
+      s = s .. (' [Sp%s]'):format(util.signedDescr(self.speed))
+   end
+   return s
+end
+
+function Item:onEquip(player)
+   if self.armor then
+      player.armor = player.armor + self.armor
+   end
+   if self.speed then
+      player.speed = player.speed + self.speed
+   end
+end
+
+function Item:onUnequip(player)
+   if self.armor then
+      player.armor = player.armor - self.armor
+   end
+   if self.speed then
+      player.speed = player.speed - self.speed
+   end
 end
 
 function Item._get:descr_a()
-   return util.descr_a(self.descr)
+   if self.plural then
+      return self.descr
+   else
+      return util.descr_a(self.descr)
+   end
 end
 
 function Item._get:descr_the()
@@ -46,21 +78,33 @@ function LightSource._get:descr()
 end
 
 function LightSource:onEquip(player)
+   Item.onEquip(self, player)
    player:changeLightRadius(self.lightRadius)
 end
 
 function LightSource:onUnequip(player)
    player:changeLightRadius(-self.lightRadius)
+   Item.onUnequip(self, player)
 end
 
 Torch = LightSource:subclass {
    glyph = {'/', C.darkerOrange},
    name = 'torch',
    lightRadius = 7,
-   turns = 300,
+   turns = 50,
 
    level = 2,
 }
+
+Lamp = LightSource:subclass {
+   glyph = {']', C.yellow},
+   name = 'lamp',
+   lightRadius = 9,
+   turns = 300,
+
+   level = 6,
+}
+
 
 Weapon = Item:subclass {
    exclude = true,
@@ -83,12 +127,6 @@ function Weapon:init()
    end
 end
 
-function Weapon._get:descr()
-   return ('%s (%s)'):format(
-      Item._get.descr(self),
-      dice.describe(self.attackDice))
-end
-
 Sword = Weapon:subclass {
    glyph = {'(', C.lightGrey},
    name = 'sword',
@@ -101,7 +139,7 @@ Dagger = Weapon:subclass {
    glyph = {'(', C.lightGrey},
    name = 'dagger',
 
-   attackDice = {1, 4, 1},
+   attackDice = {1, 4, 0},
    level = 1,
 }
 
@@ -113,6 +151,39 @@ BrokenDagger = Weapon:subclass {
    level = 1,
 }
 
+LongSword = Weapon:subclass {
+   glyph = {'(', C.white},
+   name = 'long sword',
+
+   attackDice = {1, 8, 0},
+   level = 4,
+}
+
+Spear = Weapon:subclass {
+   glyph = {'|', C.white},
+   name = 'spear',
+
+   attackDice = {1, 6, 3},
+   level = 5,
+}
+
+LargeHammer = Weapon:subclass {
+   glyph = {'(', C.darkGrey},
+   name = 'large hammer',
+
+   attackDice = {1, 12, 0},
+   level = 5,
+}
+
+TwoHandedSword = Weapon:subclass {
+   glyph = {'(', C.lightGrey},
+   name = 'two-handed sword',
+
+   attackDice = {2, 10, 0},
+   level = 7,
+}
+
+
 PickAxe = Weapon:subclass {
    exclude = true,
    glyph = {'{', C.lightGrey},
@@ -120,10 +191,11 @@ PickAxe = Weapon:subclass {
 
    attackDice = {1, 4, 2},
 
-   level = 3,
+   level = 5,
 }
 
 function PickAxe:onEquip(player)
+   Item.onEquip(self, player)
    player.digging = true
    player.onDig = function(dir)
                      self:onDig(player, dir)
@@ -133,6 +205,7 @@ end
 function PickAxe:onUnequip(player)
    player.digging = false
    player.onDig = nil
+   Item.onUnequip(self, player)
 end
 
 
@@ -157,20 +230,6 @@ function Armor:init()
    end
 end
 
-function Armor._get:descr()
-   return ('%s [+%d]'):format(
-      Item._get.descr(self),
-      self.armor)
-end
-
-function Armor:onEquip(player)
-   player.armor = player.armor + self.armor
-end
-
-function Armor:onUnequip(player)
-   player.armor = player.armor - self.armor
-end
-
 Helmet = Armor:subclass {
    armor = 1,
    glyph = {'[', C.grey},
@@ -179,6 +238,80 @@ Helmet = Armor:subclass {
 
    level = 1,
 }
+
+HornedHelmet = Armor:subclass {
+   armor = 2,
+   glyph = {'[', C.white},
+   name = 'horned helmet',
+   slot = 'helmet',
+
+   level = 3,
+}
+
+LeatherArmor = Armor:subclass {
+   armor = 1,
+   glyph = {'[', C.darkOrange},
+   name = 'leather armor',
+   slot = 'mail',
+
+   level = 3,
+}
+
+UglyClothes = Armor:subclass {
+   armor = 0,
+   glyph = {'[', C.green},
+   name = 'leather armor',
+   slot = 'mail',
+
+   level = 1,
+}
+
+PlateMail = Armor:subclass {
+   speed = -3,
+   armor = 4,
+   glyph = {'[', C.lightBlue},
+   name = 'plate mail',
+   slot = 'mail',
+
+   level = 6,
+}
+
+LeatherBoots = Armor:subclass {
+   armor = 1,
+   glyph = {'[', C.darkOrange},
+   name = 'leather boots',
+   plural = true,
+
+   slot = 'boots',
+
+   level = 3,
+}
+
+HeavyBoots = Armor:subclass {
+   armor = 2,
+   speed = -1,
+   glyph = {'[', C.grey},
+   name = 'heavy boots',
+   plural = true,
+
+   slot = 'boots',
+
+   level = 4,
+}
+
+
+BootsSpeed = Armor:subclass {
+   armor = -1,
+   speed = 3,
+   glyph = {'[', C.darkGrey},
+   name = 'boots of speed',
+   plural = true,
+
+   slot = 'boots',
+
+   level = 6,
+}
+
 
 EmptyBottle = Item:subclass {
    glyph = {'!', C.grey},
@@ -223,7 +356,7 @@ PotionNightVision = BoostingPotion:subclass {
    name = 'potion of night vision',
 
    boost = 'nightVision',
-   boostTurns = 500,
+   boostTurns = 50,
    level = 3,
 }
 
@@ -258,6 +391,8 @@ ArtifactWeapon = Weapon:subclass {
    attackDice = {2, 10, 2},
    exclude = true,
    artifact = true,
+
+   speed = 3,
 }
 
 ArtifactHelmet = Armor:subclass {
@@ -265,7 +400,7 @@ ArtifactHelmet = Armor:subclass {
    name = 'Helmet of Dwarven Kings',
    slot = 'helmet',
 
-   armor = 5,
+   armor = 6,
    exclude = true,
    artifact = true,
 }

@@ -45,6 +45,9 @@ end
 
 -- TODO frequencies
 function choiceEx(tbl, level)
+   if level and getInt(1, 40) == 1 then
+      level = level + getInt(1, 3)
+   end
    -- returns nothing or (item, freq)
    local function process(v)
       if level and level > 0 and v.level > level then

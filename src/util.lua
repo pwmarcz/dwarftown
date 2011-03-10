@@ -38,7 +38,7 @@ function signedDescr(n)
    if n >= 0 then
       return '+' .. n
    else
-      return '-' .. n
+      return '-' .. -n
    end
 end
 

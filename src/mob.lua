@@ -163,8 +163,20 @@ function Player._get:attackDice()
 end
 
 function Player:calcStats()
-   self.maxExp = self.level * 10
-   self.maxHp = 10 + (self.level-1) * 5
+   self.maxExp = self.level * 50
+   self.maxHp = 25 + (self.level-1) * 5
+end
+
+function Player:addExp(level)
+   local a = level*5
+   if level < self.level - 2 then
+      -- no exp for low-level monsters
+      a = 1
+   end
+   self.exp = self.exp + a
+   while self.exp >= self.maxExp do
+      self:advance()
+   end
 end
 
 function Player:refundEnergy()
@@ -190,6 +202,34 @@ function Player:canDig(dx, dy)
       return false
    end
    return map.canDig(self.x+dx, self.y+dy)
+end
+
+function Player:canOpen(dx, dy)
+   local tile = map.get(self.x+dx, self.y+dy)
+   return tile.type == '+' and not tile.open
+end
+
+function Player:canClose(dx, dy)
+   local tile = map.get(self.x+dx, self.y+dy)
+   return tile.type == '+' and tile.open and not tile.mob
+end
+
+function Player:open(dx, dy)
+   ui.message('You open the door.')
+   self:changeDoor(dx, dy, true)
+end
+
+function Player:close(dx, dy)
+   ui.message('You close the door.')
+   self:changeDoor(dx, dy, false)
+end
+
+function Player:changeDoor(dx, dy, open)
+   local x, y = self.x, self.y
+   local tile = map.get(x+dx, y+dy)
+   self:remove()
+   map.changeDoor(x+dx, y+dy, open)
+   self:putAt(x, y)
 end
 
 function Player:dig(dx, dy)
@@ -356,19 +396,7 @@ function Player:onAttack(mob, damage)
    if damage > 0 then
       ui.message('You hit %s.', mob.descr_the)
    else
-      ui.message('You fail to hurt %s.')
-   end
-end
-
-function Player:addExp(level)
-   local a = level
-   if level > self.level then
-      local b = level - self.level
-      a = a + b*(b+1)
-   end
-   self.exp = self.exp + a
-   while self.exp >= self.maxExp do
-      self:advance()
+      ui.message('You fail to hurt %s.', mob.descr_the)
    end
 end
 
@@ -446,24 +474,67 @@ function Monster:onAttack(mob, damage)
    end
 end
 
-function Monster:act()
-   if self.hostile and self:canSeePlayer() then
-      if self.summonsTimes and self.summonsTimes > 0
-         and dice.getInt(1,15) == 1
-      then
-         self.summonsTimes = self.summonsTimes - 1
-         for x = self.x-2, self.x+2 do
-            for y = self.y-2, self.y+2 do
-               local tile = map.get(x, y)
-               if not tile.empty and tile.walkable and not tile.mob then
-                  if dice.getInt(1, 3) == 1 then
-                     local m = dice.choice(self.summonedMonsters):make()
-                     m:putAt(x, y)
-                  end
+function Monster:summon()
+   if self.summonsTimes and self.summonsTimes > 0
+      and dice.getInt(1,15) == 1
+   then
+      self.summonsTimes = self.summonsTimes - 1
+
+      for x = self.x-2, self.x+2 do
+         for y = self.y-2, self.y+2 do
+            local tile = map.get(x, y)
+            if not tile.empty and tile.walkable and not tile.mob then
+               if dice.getInt(1, 3) == 1 then
+                  local m = dice.choice(self.summonedMonsters):make()
+                  m:putAt(x, y)
                end
             end
          end
-         ui.message('%s summons monsters!', self.descr_the)
+      end
+      ui.message('%s summons monsters!', self.descr_the)
+      return true
+   end
+end
+
+-- returns true
+function Monster:escapeLight()
+   if self.tile.light > 0 then
+      if self.tile.inFov and map.player.lightRadius > 0 then
+         -- not 100% correct, but we assume here that the tile is
+         -- lit by player, and try to escape from him
+         local dx, dy = util.dirTowards(self.x, self.y,
+                                        map.player.x, map.player.y)
+         if self:canWalk(-dx, -dy) then
+            self:walk(-dx, -dy)
+            return true
+         end
+      end
+      local dirs = {}
+      for _, d in ipairs(util.dirs) do
+         local dx, dy = unpack(d)
+         if map.get(self.x+dx, self.y+dy).light == 0 and
+            self:canWalk(dx, dy)
+         then
+            table.insert(dirs, d)
+         end
+      end
+      if #dirs > 0 then
+         self:walk(unpack(dice.choice(dirs)))
+         return true
+      end
+   end
+end
+
+function Monster:act()
+   if self.wanders and self.fearsLight then
+      if self:escapeLight() then
+         return
+      end
+   end
+   if self.hostile and self:canSeePlayer() then
+
+      if self:summon() then
+         return
       end
 
       local dx, dy = util.dirTowards(
@@ -530,6 +601,7 @@ GlowingFungus = Monster:subclass {
    attackDice = {0, 0, 0},
 
    freq = 0.5,
+   level = 1,
 
    lightRadius = 4,
 }
@@ -540,8 +612,9 @@ end
 Mimic = Monster:subclass {
    name = 'mimic',
 
-   attackDice = {1,6,0},
+   attackDice = {1,6,2},
    maxHp = 10,
+   level = 4,
 
    awake = false,
 }
@@ -578,10 +651,32 @@ Spectre = Monster:subclass {
    glyph = {'Z', C.white},
    name = 'spectre',
 
-   attackDice = {1,5,0},
+   attackDice = {1,6,5},
    maxHp = 10,
 
+   level = 6,
+}
+
+Wight = Monster:subclass {
+   glyph = {'Z', C.darkGrey},
+   name = 'wight',
+
+   attackDice = {1, 6, 4},
+   maxHp = 8,
+
+   level = 5,
+}
+
+Skeleton = Monster:subclass {
+   glyph = {'z', C.white},
+   name = 'skeleton',
+
+   attackDice = {1, 4, 4},
+   maxHp = 8,
+
    level = 4,
+
+   dropRate = 0.1,
 }
 
 function Spectre._get:visible()
@@ -596,26 +691,58 @@ Rat = Monster:subclass {
 
    maxHp = 5,
    speed = 2,
+
+   level = 1,
 }
 
 GiantRat = Monster:subclass {
-   glyph = {'R', C.darkOrange},
+   glyph = {'r', C.darkerOrange},
    name = 'giant rat',
 
-   attackDice = {1,4,1},
+   attackDice = {1,4,0},
 
    maxHp = 7,
+
+   level = 2,
 }
 
+Bat = Monster:subclass {
+   glyph = {'b', C.darkOrange},
+   name = 'bat',
+
+   attackDice = {1,2,0},
+
+   maxHp = 4,
+
+   speed = 3,
+   fearsLight = true,
+   level = 1,
+}
+
+KillerBat = Monster:subclass {
+   glyph = {'b', C.orange},
+   name = 'killer bat',
+
+   attackDice = {2,6,0},
+
+   maxHp = 6,
+
+   freq = 0.1,
+   speed = 3,
+   fearsLight = true,
+   level = 1,
+}
+
+
 Bear = Monster:subclass {
-   glyph = {'B', C.darkOrange},
+   glyph = {'B', C.darkGrey},
    name = 'bear',
 
-   attackDice = {1,10,1},
+   attackDice = {1,10,2},
 
    speed = -1,
    maxHp = 20,
-   level = 3,
+   level = 4,
    hostile = false,
 }
 
@@ -627,7 +754,7 @@ Squirrel = Monster:subclass {
 
    speed = 5,
    maxHp = 3,
-   level = 0,
+   level = 1,
    hostile = false,
 }
 
@@ -638,36 +765,57 @@ Goblin = Monster:subclass {
    attackDice = {1,6,0},
 
    maxHp = 10,
-   level = 2,
+   armor = 1,
 
-   dropRate = 0.1,
+   level = 3,
+
+   dropRate = 0.2,
 }
+
+Bugbear = Monster:subclass {
+   glyph = {'G', C.green},
+   name = 'bugbear',
+
+   attackDice = {2,6,2},
+
+   maxHp = 40,
+   armor = 5,
+
+   level = 7,
+
+   freq = 0.3,
+   dropRate = 0.2,
+}
+
 
 Ogre = Monster:subclass {
    glyph = {'O', C.lightGreen},
    name = 'ogre',
 
-   attackDice = {1,12,0},
+   attackDice = {1,8,0},
 
    speed = -1,
    maxHp = 20,
-   level = 4,
+   armor = 2,
+
+   level = 5,
 
    freq = 0.5,
    dropRate = 0.2,
 }
 
 GoblinNecro = Monster:subclass {
-   glyph = {'G', C.lightGreen},
+   glyph = {'g', C.darkGrey},
    name = 'Goblin Necromancer',
 
-   attackDice = {1,12,0},
+   attackDice = {1,10,0},
+   armor = 3,
 
    speed = -2,
    maxHp = 30,
-   level = 5,
+   level = 6,
 
-   summonedMonsters = { Rat, Spectre },
+   summonedMonsters = { Rat, Spectre, Wight, Skeleton },
    summonsTimes = 3,
 
    wanders = false,
@@ -676,6 +824,31 @@ GoblinNecro = Monster:subclass {
 }
 
 function GoblinNecro:die()
+   self.tile:addItem(item.PickAxe:make())
    self.tile:addItem(item.ArtifactWeapon:make())
+   Monster.die(self)
+end
+
+
+GoblinKing = Monster:subclass {
+   glyph = {'g', C.white},
+   name = 'Goblin King',
+
+   attackDice = {2,10,2},
+   armor = 4,
+
+   maxHp = 35,
+   level = 8,
+
+   --summonedMonsters = { Rat, Spectre, Wight, Skeleton },
+   --summonsTimes = 3,
+
+   wanders = false,
+
+   exclude = true,
+}
+
+function GoblinKing:die()
+   self.tile:addItem(item.ArtifactHelmet:make())
    Monster.die(self)
 end
