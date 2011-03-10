@@ -43,9 +43,19 @@ function createWorld()
    end
 
    --world:addWalls()
-   print('Connecting')
+   --print('Connecting')
    world:floodConnect()
    --world:print()
+
+   -- now close passage to the Mines
+   for y = H+3, (H+3)*2 do
+      for x = W-1, W+1 do
+         if not world:get(x, y).empty then
+            world:set(x, y, world.wall)
+         end
+      end
+   end
+
    world:placeOnMap(0, 0)
    map.sectors = world.sectors
    return sectors['f']:getStartingPoint()
@@ -60,7 +70,7 @@ Sector = class.Object:subclass {
 }
 
 function Sector:place(x, y, w, h)
-   print('Building ' .. self.name)
+   --print('Building ' .. self.name)
    local sector = self:make { x = x, y = y, w = w, h = h }
    if sector.nItems > 0 then
       sector.room:addItems(sector.nItems, sector.itemsLevel)
@@ -97,6 +107,15 @@ function Forest:init()
    }
    self.room = mapgen.cell.makeCellRoom(self.room, true)
 
+   self.room:floodConnect()
+
+   if dice.getInt(1, 5) == 1 then
+      local w = math.floor(self.w/3)
+      local lake = makeLake(w, math.floor(2*w/3))
+      --lake:print()
+      lake:placeIn(self.room, math.floor(self.w/3), math.floor((self.h-self.roadH)/4))
+   end
+
    local xc = math.floor(self.w/2)
    for y = self.h - 3, self.h + self.roadH - 1 do
       local d = dice.getInt(-1, 1)
@@ -104,13 +123,6 @@ function Forest:init()
          tile = self.room.floor:make()
          self.room:set(x, y, tile)
       end
-   end
-
-   if dice.getInt(1, 5) == 1 then
-      local w = math.floor(self.w/3)
-      local lake = makeLake(w, math.floor(2*w/3))
-      --lake:print()
-      lake:placeIn(self.room, math.floor(self.w/3), math.floor((self.h-self.roadH)/4))
    end
 
    self.room:addWalls()

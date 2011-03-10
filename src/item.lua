@@ -397,7 +397,7 @@ ArtifactWeapon = Weapon:subclass {
 
 ArtifactHelmet = Armor:subclass {
    glyph = {'[', C.lighterBlue},
-   name = 'Helmet of Dwarven Kings',
+   name = 'Helmet of the Dwarven Kings',
    slot = 'helmet',
 
    armor = 6,
@@ -405,4 +405,4 @@ ArtifactHelmet = Armor:subclass {
    artifact = true,
 }
 
-N_ARTIFACTS = 1
+N_ARTIFACTS = 2

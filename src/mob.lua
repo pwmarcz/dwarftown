@@ -168,9 +168,9 @@ function Player:calcStats()
 end
 
 function Player:addExp(level)
-   local a = level*5
+   local a = level*3
    if level < self.level - 2 then
-      -- no exp for low-level monsters
+      -- little exp for low-level monsters
       a = 1
    end
    self.exp = self.exp + a
@@ -457,7 +457,9 @@ end
 
 function Monster:die()
    if dice.getFloat(0, 1) < self.dropRate then
-      self.tile:addItem(dice.choiceEx(item.Item.all, self.level):make())
+      local level = self.level + dice.getInt(-1, 2)
+      local it = dice.choiceEx(item.Item.all, level):make()
+      self.tile:addItem(it)
    end
    self:remove()
    Mob.die(self)
@@ -612,9 +614,9 @@ end
 Mimic = Monster:subclass {
    name = 'mimic',
 
-   attackDice = {1,6,2},
-   maxHp = 10,
-   level = 4,
+   attackDice = {2,6,2},
+   maxHp = 25,
+   level = 6,
 
    awake = false,
 }
@@ -636,6 +638,7 @@ end
 function Mimic:receiveDamage(damage, from)
    if from.isPlayer and not self.awake then
       ui.message('It\'s a mimic!')
+      damage = 1
       self:wakeUp()
    end
    Monster.receiveDamage(self, damage, from)
@@ -651,7 +654,7 @@ Spectre = Monster:subclass {
    glyph = {'Z', C.white},
    name = 'spectre',
 
-   attackDice = {1,6,5},
+   attackDice = {1, 6, 5},
    maxHp = 10,
 
    level = 6,
@@ -661,7 +664,7 @@ Wight = Monster:subclass {
    glyph = {'Z', C.darkGrey},
    name = 'wight',
 
-   attackDice = {1, 6, 4},
+   attackDice = {1, 6, 6},
    maxHp = 8,
 
    level = 5,
@@ -671,7 +674,7 @@ Skeleton = Monster:subclass {
    glyph = {'z', C.white},
    name = 'skeleton',
 
-   attackDice = {1, 4, 4},
+   attackDice = {1, 4, 6},
    maxHp = 8,
 
    level = 4,
@@ -735,7 +738,7 @@ KillerBat = Monster:subclass {
 
 
 Bear = Monster:subclass {
-   glyph = {'B', C.darkGrey},
+   glyph = {'B', C.darkOrange},
    name = 'bear',
 
    attackDice = {1,10,2},
@@ -762,7 +765,7 @@ Goblin = Monster:subclass {
    glyph = {'g', C.darkGreen},
    name = 'goblin',
 
-   attackDice = {1,6,0},
+   attackDice = {1,6,2},
 
    maxHp = 10,
    armor = 1,
@@ -776,7 +779,7 @@ Bugbear = Monster:subclass {
    glyph = {'G', C.green},
    name = 'bugbear',
 
-   attackDice = {2,6,2},
+   attackDice = {2,6,4},
 
    maxHp = 40,
    armor = 5,
@@ -792,7 +795,7 @@ Ogre = Monster:subclass {
    glyph = {'O', C.lightGreen},
    name = 'ogre',
 
-   attackDice = {1,8,0},
+   attackDice = {1,8,2},
 
    speed = -1,
    maxHp = 20,
@@ -808,7 +811,7 @@ GoblinNecro = Monster:subclass {
    glyph = {'g', C.darkGrey},
    name = 'Goblin Necromancer',
 
-   attackDice = {1,10,0},
+   attackDice = {1,10,4},
    armor = 3,
 
    speed = -2,

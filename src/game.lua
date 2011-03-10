@@ -74,7 +74,6 @@ function init()
 
    turn = 0
    done = false
-   leaving = false
 end
 
 function mainLoop()
@@ -101,6 +100,9 @@ function mainLoop()
             done = true
          end
       elseif player.leaving then
+         if player.nArtifacts == item.N_ARTIFACTS then
+            ui.promptEnter('[Congratulations! You have won. Press ENTER]')
+         end
          done = true
       end
    end

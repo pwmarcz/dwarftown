@@ -290,7 +290,10 @@ function Room:floodFill(x, y)
    local stack = {p}
    local all = {}
 
+   local n = 0
+
    while #stack > 0 do
+      --n = n + 1
       local p = table.remove(stack)
       local x, y = unpack(p)
       local tile = self:get(x, y)
@@ -304,6 +307,7 @@ function Room:floodFill(x, y)
          table.insert(stack, {x, y-1})
       end
    end
+   --print (#all, n)
    return all
 end
 
@@ -350,9 +354,11 @@ function Room:addMonsters(n, level, tbl)
    end
 end
 
+-- Randomly try to add rooms produced with fun().
 function Room:addRooms(x, y, w, h, fun, ignoreWalls)
    local room
    local tried
+   local points
    for _ = 1, 2000 do
       if room == nil or tried > 20 then
          room = fun()

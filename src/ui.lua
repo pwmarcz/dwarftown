@@ -6,6 +6,7 @@ require 'util'
 require 'text'
 
 local C = tcod.color
+local K = tcod.k
 
 SCREEN_W = 80
 SCREEN_H = 25
@@ -88,17 +89,19 @@ function prompt(keys, ...)
       for _, k in ipairs(keys) do
          if k == key.c or k == key.vk then
             return k
+         elseif not k then
+            return false
          end
       end
    end
 end
 
 function promptYN(...)
-   return prompt({'y', 'n'}, C.green, ...) == 'y'
+   return prompt({'y', false}, C.green, ...) == 'y'
 end
 
 function promptEnter(...)
-   prompt({tcod.k.ENTER, tcod.k.KPENTER}, C.green, ...)
+   prompt({tcod.k.ENTER, tcod.k.KPENTER}, C.yellow, ...)
 end
 
 function promptItems(items, ...)
@@ -296,8 +299,7 @@ function look()
    messages = {}
 
    ui.message('Look mode: use movement keys to look, ' ..
-              'Alt-movement to jump, ' ..
-              'Esc/q to exit.')
+              'Alt-movement to jump.')
    ui.message('')
    local messagesLevel = #messages
    while true do
@@ -348,7 +350,7 @@ function look()
 
          end
 
-      elseif cmd == 'quit' then
+      elseif key.vk ~= K.SHIFT and key.vk ~= K.ALT and key.vk ~= K.CONTROL then
          break
       end
    end

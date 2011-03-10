@@ -40,11 +40,15 @@ end
 
 function tick()
    for m, _ in pairs(mobs) do
-      m:tick()
-      if not m.isPlayer then
-         while m.energy > 0 and not m.dead do
-            m:spendEnergy()
-            m:act()
+      local d = dist(m.x, m.y, player.x, player.y)
+      -- don't consider distant monsters
+      if d < 40 then
+         m:tick()
+         if not m.isPlayer then
+            while m.energy > 0 and not m.dead do
+               m:spendEnergy()
+               m:act()
+            end
          end
       end
    end
