@@ -24,7 +24,7 @@ Look:  x                   Help:         ?
 ]]
 
 
-title = 'Dwarftown v0.8'
+title = 'Dwarftown v0.85'
 
 function getTitleScreen()
    return {

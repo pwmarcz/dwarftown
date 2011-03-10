@@ -20,6 +20,8 @@ STATUS_H = 10
 MESSAGES_W = 30
 MESSAGES_H = 12
 
+coloredMem = false
+
 local viewConsole
 local messagesConsole
 local rootConsole
@@ -138,9 +140,11 @@ function promptItems(items, ...)
              rootConsole, 1, 1)
    tcod.console.flush()
    local key = tcod.console.waitForKeypress(true)
-   local i = ord(key.c) - letter + 1
-   if items[i] then
-      return items[i]
+   if ord(key.c) then
+      local i = ord(key.c) - letter + 1
+      if items[i] then
+         return items[i]
+      end
    end
 end
 
@@ -276,10 +280,18 @@ function tileAppearance(tile)
       end
    else
       char, color = glyph(tile.memGlyph)
-      if tile.memLight == 0 then
-         color = color * 0.35
+      if coloredMem then
+         if tile.memLight == 0 then
+            color = color * 0.35
+         else
+            color = color * 0.6
+         end
       else
-         color = color * 0.6
+         if tile.memLight == 0 then
+            color = C.darkestGrey
+         else
+            color = C.darkerGrey
+         end
       end
    end
 

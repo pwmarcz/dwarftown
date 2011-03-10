@@ -31,6 +31,7 @@ local keybindings = {
    [{'q', K.ESCAPE}] = 'quit',
    [{'?'}] = 'help',
    [{K.F11}] = 'screenshot',
+   [{K.F8}] = 'toggleColor',
    --[{K.F12}] = 'mapScreenshot',
 }
 
@@ -55,7 +56,7 @@ function init()
    if not wizard then
       startingItems = {
          item.Torch,
-         item.PotionHealing,
+         item.PotionHealth,
       }
    else
       startingItems = {
@@ -192,7 +193,7 @@ function command.pickUp()
          player:pickUp(items[1])
          return
       end
-      local item = ui.promptItems(items, 'Pick up:')
+      local item = ui.promptItems(items, 'Select an item to pick up')
       if item then
          player:pickUp(item)
          return
@@ -206,7 +207,7 @@ function command.pickUp()
 end
 
 function command.drop()
-   local item = ui.promptItems(player.items, 'Drop:')
+   local item = ui.promptItems(player.items, 'Select an item to drop')
    if item then
       player:drop(item)
       player:spendEnergy()
@@ -214,7 +215,7 @@ function command.drop()
 end
 
 function command.inventory()
-   local item = ui.promptItems(player.items, 'Use:')
+   local item = ui.promptItems(player.items, 'Select an item to use')
    if item then
       player:use(item)
       player:spendEnergy()
@@ -232,6 +233,11 @@ end
 function command.screenshot()
    ui.screenshot()
    ui.message(C.green, 'Screenshot saved.')
+end
+
+function command.toggleColor()
+   ui.coloredMem = not ui.coloredMem
+   ui.update()
 end
 
 function command.mapScreenshot()
