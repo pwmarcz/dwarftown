@@ -29,7 +29,7 @@ The game saves a character dump to character.txt file.
 ]]
 
 
-title = 'Dwarftown v0.85'
+title = 'Dwarftown v1.0'
 
 function getTitleScreen()
    return {
