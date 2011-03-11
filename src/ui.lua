@@ -176,12 +176,13 @@ end
 
 function drawStatus(player)
    local sector = map.getSector(player.x, player.y)
-   local sectorName
+   local sectorName, sectorColor
    if sector then
       sectorName = sector.name
+      sectorColor = sector.color
    end
    local lines = {
-      {sectorName or ''},
+      {sectorColor or C.white, sectorName or ''},
       {''},
       {'Turn     %d', game.turn},
       {''}, -- line 4: health bar
@@ -200,7 +201,15 @@ function drawStatus(player)
    statusConsole:clear()
    statusConsole:setDefaultForeground(C.lightGrey)
    for i, msg in ipairs(lines) do
-      statusConsole:print(0, i-1, string.format(unpack(msg)))
+      local s
+      if type(msg[1]) == 'string' then
+         statusConsole:setDefaultForeground(C.lightGrey)
+         s = string.format(unpack(msg))
+      else
+         statusConsole:setDefaultForeground(msg[1])
+         s = string.format(unpack(msg, 2))
+      end
+      statusConsole:print(0, i-1, s)
    end
 
    if player.hp < player.maxHp then

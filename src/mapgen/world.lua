@@ -1,5 +1,6 @@
 module('mapgen.world', package.seeall)
 
+require 'tcod'
 require 'mapgen'
 require 'mapgen.cell'
 require 'mapgen.tetris'
@@ -7,6 +8,8 @@ require 'mapgen.tree'
 require 'dice'
 require 'map'
 require 'util'
+
+local C = tcod.color
 
 local world
 
@@ -56,6 +59,7 @@ end
 Sector = class.Object:subclass {
    nItems = 0,
    itemsLevel = 0,
+   color = C.white,
 
    nMonsters = 0,
    monsters = nil,
@@ -84,6 +88,7 @@ end
 -- Forest is actually bigger: there are roadH road tiles on the bottom
 Forest = Sector:subclass {
    name = 'Forest',
+   color = C.green,
 
    roadH = 25,
 
@@ -144,6 +149,7 @@ end
 
 RatCaves = Sector:subclass {
    name = 'Rat Caves',
+   color = C.darkOrange,
    nItems = 20,
    itemsLevel = 2,
 
@@ -163,6 +169,7 @@ end
 
 Marketplace = Sector:subclass {
    name = 'Dwarftown Marketplace',
+   color = C.orange,
    nMonsters = 5,
    monsters = {mob.Rat, mob.Goblin},
 
@@ -241,6 +248,7 @@ end
 
 Graveyard = Sector:subclass {
    name = 'Dwarftown Graveyard',
+   color = C.darkGrey,
    nMonsters = 35,
    monsters = {mob.Spectre, mob.Wight, mob.Skeleton},
 }
@@ -285,6 +293,7 @@ end
 
 Square = Sector:subclass {
    name = 'Dwarftown Square',
+   color = C.white,
 
    --nMonsters = 30,
    -- monsters placed manually indoors
@@ -335,6 +344,7 @@ end
 
 Mines = Sector:subclass {
    name = 'Dwarftown Mines',
+   color = C.grey,
 
    nMonsters = 65,
    monsters = {mob.Ogre, mob.Goblin, mob.Orc, mob.Bugbear, mob.KillerBat, mob.GlowingFungus},
