@@ -344,7 +344,7 @@ function tileAppearance(tile)
          end
       else
          if tile.memLight == 0 then
-            color = C.darkestGrey
+            color = C.darkerGrey * 0.6
          else
             color = C.darkerGrey
          end

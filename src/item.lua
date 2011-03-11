@@ -110,7 +110,7 @@ Weapon = Item:subclass {
    exclude = true,
    slot = 'weapon',
 
-   freq = 2,
+   freq = 1.3,
 }
 
 function Weapon:init()
@@ -227,7 +227,7 @@ function Armor:init()
    if self.artifact then
       return
    end
-   if dice.getInt(1, 20) == 1 then
+   if dice.getInt(1, 10) == 1 then
       self.armor = self.armor + dice.getInt(-2, 3)
    end
 end
@@ -275,7 +275,8 @@ PlateMail = Armor:subclass {
    name = 'plate mail',
    slot = 'mail',
 
-   level = 6,
+   level = 4,
+   freq = 0.4,
 }
 
 LeatherBoots = Armor:subclass {
@@ -406,7 +407,8 @@ ArtifactHelmet = Armor:subclass {
    name = 'Helmet of the Dwarven Kings',
    slot = 'helmet',
 
-   armor = 2,
+   armor = 3,
+   speed = 3,
    exclude = true,
    artifact = true,
 }

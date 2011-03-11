@@ -12,7 +12,7 @@ Mob = class.Object:subclass {
    glyph = {'?'},
    name = '<mob>',
    -- regeneration rate: how many turns to full regeneration
-   regen = 120,
+   regen = 200,
    armor = 0,
    lightRadius = 0,
 
@@ -120,7 +120,7 @@ function Mob:attack(dx, dy)
 
    damage = math.max(0, damage - math.max(mob.armor, 0))
    self:onAttack(mob, damage, crit)
-   mob:receiveDamage(damage, self)
+   mob:receiveDamage(damage, crit, self)
 end
 
 Player = Mob:subclass {
@@ -143,7 +143,7 @@ Player = Mob:subclass {
 
    --attackDice = {1,3,1},
 
-   maxItems = 7,
+   maxItems = 10,
 
    nArtifacts = 0,
 
@@ -175,7 +175,7 @@ end
 
 function Player:calcStats()
    self.maxExp = self.level * 50
-   self.maxHp = 25 + (self.level-1) * 6
+   self.maxHp = 25 + (self.level-1) * 10
 end
 
 function Player:addExp(level)
@@ -224,12 +224,18 @@ end
 
 function Player:canOpen(dx, dy)
    local tile = map.get(self.x+dx, self.y+dy)
-   return tile.type == '+' and not tile.open
+   return tile.type == '+' and
+      not tile.open and
+      not tile.mob and
+      not tile.items
 end
 
 function Player:canClose(dx, dy)
    local tile = map.get(self.x+dx, self.y+dy)
-   return tile.type == '+' and tile.open and not tile.mob
+   return tile.type == '+' and
+      tile.open and
+      not tile.mob and
+      not tile.items
 end
 
 function Player:open(dx, dy)
@@ -310,7 +316,7 @@ function Player:tick()
             self:recalcFov()
             message = 'Your vision returns to normal.'
          elseif k == 'speed' then
-            self.speed = self.speed - 3
+            self.speed = self.speed - 4
             message = 'You slow down.'
          elseif k == 'strength' then
             message = 'You feel weaker.'
@@ -341,12 +347,17 @@ function Player:remove()
    map.eraseFov(x, y, self.fovRadiusLight)
 end
 
-function Player:receiveDamage(damage, from)
+function Player:receiveDamage(damage, crit, from)
    self.hp = self.hp - damage
    if self.hp <= 0 then
-      ui.message(C.red, 'You die...')
-      self.killedBy = from
-      self:die()
+      if crit and self.hp + damage > self.maxHp/3 then
+         -- Critical hits take us down to 1 HP
+         self.hp = 1
+      else
+         ui.message(C.red, 'You die...')
+         self.killedBy = from
+         self:die()
+      end
    end
 end
 
@@ -442,7 +453,7 @@ function Player:addBoost(boost, turns)
          self:recalcFov()
          message = 'You suddenly see more around yourself.'
       elseif boost == 'speed' then
-         self.speed = self.speed + 3
+         self.speed = self.speed + 4
          message = 'You feel yourself speed up!'
       elseif boost == 'strength' then
          -- attack dice code will handle this
@@ -474,7 +485,7 @@ Monster = Mob:subclass {
    wanders = true
 }
 
-function Monster:receiveDamage(damage, from)
+function Monster:receiveDamage(damage, crit, from)
    self.hp = self.hp - damage
    if self.hp <= 0 then
       ui.message('%s is killed!', self.descr_the)
@@ -516,7 +527,7 @@ end
 
 function Monster:summon()
    if self.summonsTimes and self.summonsTimes > 0
-      and dice.getInt(1,15) == 1
+      and dice.getInt(1,10) == 1
    then
       self.summonsTimes = self.summonsTimes - 1
 
@@ -672,9 +683,9 @@ Mimic = Monster:subclass {
    name = 'mimic',
 
    attackDice = {2,6,3},
-   maxHp = 24,
+   maxHp = 20,
    level = 6,
-   armor = 2,
+   armor = 5,
 
    awake = false,
 }
@@ -693,13 +704,13 @@ function Mimic:act()
    end
 end
 
-function Mimic:receiveDamage(damage, from)
+function Mimic:receiveDamage(damage, crit, from)
    if from.isPlayer and not self.awake then
       ui.message('It\'s a mimic!')
       damage = 1
       self:wakeUp()
    end
-   Monster.receiveDamage(self, damage, from)
+   Monster.receiveDamage(self, damage, crit, from)
 end
 
 function Mimic:wakeUp()
@@ -712,7 +723,7 @@ Spectre = Monster:subclass {
    glyph = {'Z', C.white},
    name = 'spectre',
 
-   attackDice = {1, 6, 6},
+   attackDice = {1, 6, 4},
    maxHp = 20,
    armor = 3,
 
@@ -723,7 +734,7 @@ Wight = Monster:subclass {
    glyph = {'Z', C.darkGrey},
    name = 'wight',
 
-   attackDice = {1, 6, 7},
+   attackDice = {1, 6, 5},
    maxHp = 15,
    armor = 3,
 
@@ -734,7 +745,7 @@ Skeleton = Monster:subclass {
    glyph = {'z', C.white},
    name = 'skeleton',
 
-   attackDice = {1, 4, 6},
+   attackDice = {1, 4, 4},
    maxHp = 12,
    armor = 2,
 
@@ -843,9 +854,9 @@ Bugbear = Monster:subclass {
    glyph = {'O', C.yellow},
    name = 'bugbear',
 
-   attackDice = {2,6,6},
+   attackDice = {2,6,0},
 
-   maxHp = 40,
+   maxHp = 20,
    armor = 6,
 
    level = 7,
