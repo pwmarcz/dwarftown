@@ -15,10 +15,10 @@ VIEW_W = 48
 VIEW_H = 23
 
 STATUS_W = 29
-STATUS_H = 10
+STATUS_H = 12
 
 MESSAGES_W = 30
-MESSAGES_H = 12
+MESSAGES_H = 10
 
 coloredMem = false
 
@@ -27,9 +27,10 @@ local messagesConsole
 local rootConsole
 local statusConsole
 
-local messages
+messages = {}
 
 local ord = string.byte
+local chr = string.char
 
 function init()
    tcod.console.setCustomFont(
@@ -74,7 +75,7 @@ function message(a, ...)
       msg.color = C.white
    else
       msg.text = string.format(...)
-      msg.color = a
+      msg.color = a or C.white
    end
    msg.text = util.capitalize(msg.text)
    table.insert(messages, msg)
@@ -99,7 +100,9 @@ function prompt(keys, ...)
 end
 
 function promptYN(...)
-   return prompt({'y', false}, C.green, ...) == 'y'
+   local result = prompt({'y', false}, C.green, ...)
+   --table.remove(messages)
+   return result == 'y'
 end
 
 function promptEnter(...)
@@ -148,6 +151,21 @@ function promptItems(items, ...)
    end
 end
 
+function stringItems(items)
+   local lines = {}
+   for i, it in ipairs(items) do
+      local letter = ord('a')-1+i
+      local s
+      if it.equipped then
+         s = ('%c * %s %s'):format(letter, it.glyph[1], it.descr)
+      else
+         s = ('%c   %s %s'):format(letter, it.glyph[1], it.descr)
+      end
+      table.insert(lines, s)
+   end
+   return table.concat(lines, '\n')
+end
+
 function newTurn()
    local i = #messages
    while i > 0 and messages[i].new do
@@ -186,20 +204,41 @@ function drawStatus(player)
    end
 
    if player.hp < player.maxHp then
-      local y = 3
-      local health = math.ceil((STATUS_W-2) * player.hp / player.maxHp)
-      statusConsole:putCharEx(0, y, ord('['), C.grey, C.black)
-      statusConsole:putCharEx(STATUS_W - 1, y, ord(']'), C.grey, C.black)
-      for i = 1, STATUS_W-2 do
-         if i - 1 < health then
-            statusConsole:putCharEx(i, y, ord('*'), C.white, C.black)
-         else
-            statusConsole:putCharEx(i, y, ord('-'), C.grey, C.black)
-         end
-      end
+      drawHealthBar(3, player.hp / player.maxHp)
    end
 
+   if player.enemy then
+      local m = player.enemy
+      if m.x and m.visible and
+         map.dist(player.x, player.y, m.x, m.y) <= 2
+      then
+         local s = ('L%d %-18s %s'):format(
+            m.level, m.descr, dice.describe(m.attackDice))
+         statusConsole:setDefaultForeground(m.glyph[2])
+         statusConsole:print(0, STATUS_H-2, s)
+         if m.hp < m.maxHp then
+            drawHealthBar(STATUS_H-1, m.hp/m.maxHp, m.glyph[2])
+         end
+      else
+         player.enemy = nil
+      end
+   end
 end
+
+function drawHealthBar(y, fract, color)
+   color = color or C.white
+   local health = math.ceil((STATUS_W-2) * fract)
+   statusConsole:putCharEx(0, y, ord('['), C.grey, C.black)
+   statusConsole:putCharEx(STATUS_W - 1, y, ord(']'), C.grey, C.black)
+   for i = 1, STATUS_W-2 do
+      if i - 1 < health then
+         statusConsole:putCharEx(i, y, ord('*'), color, C.black)
+      else
+         statusConsole:putCharEx(i, y, ord('-'), C.grey, C.black)
+      end
+   end
+end
+
 
 function drawMessages()
    messagesConsole:clear()
@@ -275,7 +314,15 @@ function tileAppearance(tile)
          end
       else
          if tile.seenLight == 0 then
-            color = color * 0.8
+            color = color * 0.7
+
+            --[[
+            local sat = color:getSaturation()
+            local val = color:getValue()
+            color = tcod.Color(color.r,color.g,color.b)
+            color:setSaturation(sat*0.8)
+            color:setValue(val*0.7)
+            --]]
          end
       end
    else
@@ -397,6 +444,27 @@ end
 
 function screenshot()
    tcod.system.saveScreenshot(nil)
+end
+
+function stringScreenshot()
+   local lines = {}
+
+   for y = 0, SCREEN_H-1 do
+      local line = ''
+      for x = 0, SCREEN_W-1 do
+         line = line .. chr(rootConsole:getChar(x, y))
+      end
+      table.insert(lines, line)
+   end
+
+   local sep = ''
+   for x = 0, SCREEN_W-1 do
+      sep = sep .. '-'
+   end
+   table.insert(lines, sep)
+   table.insert(lines, 1, sep)
+
+   return table.concat(lines, '\n')
 end
 
 ---[[

@@ -237,9 +237,10 @@ function Room:connect(points, makeDoors)
       for i = 0, n-1 do
          local x, y = path:get(i)
          local c = self:get(x, y).type
+
          if c == '+' or c == '.' then
             -- pass
-         elseif c == '#' and last == '.' then
+         elseif c == '#' and (last == '.' or last == ' ') then
             local tile
             if makeDoors == 'closed' then
                tile = map.Door:make{ open = false }
@@ -254,8 +255,8 @@ function Room:connect(points, makeDoors)
          end
          last = c
       end
+      --self:addWalls()
    end
-   self:addWalls()
 end
 
 function Room:floodConnect(...)

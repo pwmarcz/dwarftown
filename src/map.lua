@@ -105,7 +105,7 @@ function dig(x, y)
             end)
 end
 
-MAX_LIGHT_RADIUS = 20
+MAX_LIGHT_RADIUS = 10
 
 -- Alter map at x, y with function fun, updating the lighting.
 -- The function has to turn off and then on all the lights around the place.
@@ -400,6 +400,7 @@ TallTree = Tile:subclass {
 
 Tree = Floor:subclass {
    glyph = {'&', C.darkGreen},
+   type = '.',
    name = 'tree',
 }
 

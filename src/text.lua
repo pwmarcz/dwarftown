@@ -21,6 +21,11 @@ Move:  numpad,             Inventory:    i
 Wait:  5, .                Quit:         q, Esc
 Look:  x                   Help:         ?
                            Screenshot:   F11
+
+--- Character dump ---
+
+The game saves a character dump to character.txt file.
+
 ]]
 
 

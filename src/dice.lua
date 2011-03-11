@@ -70,6 +70,7 @@ function choiceEx(tbl, level)
       if it then
          sum = sum - freq
          if sum < 0 then
+            --print(level, it.name)
             return it
          end
       end

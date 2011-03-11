@@ -20,7 +20,7 @@ function Item._get:descr()
    if self.attackDice then
       s = s .. (' (%s)'):format(dice.describe(self.attackDice))
    end
-   if self.armor and self.armor ~= 0 then
+   if self.armor then
       s = s .. (' [%s]'):format(util.signedDescr(self.armor))
    end
    if self.speed and self.speed ~= 0 then
@@ -91,7 +91,7 @@ Torch = LightSource:subclass {
    glyph = {'/', C.darkerOrange},
    name = 'torch',
    lightRadius = 7,
-   turns = 50,
+   turns = 100,
 
    level = 2,
 }
@@ -102,13 +102,15 @@ Lamp = LightSource:subclass {
    lightRadius = 9,
    turns = 300,
 
-   level = 6,
+   level = 4,
 }
 
 
 Weapon = Item:subclass {
    exclude = true,
    slot = 'weapon',
+
+   freq = 2,
 }
 
 function Weapon:init()
@@ -147,7 +149,7 @@ BrokenDagger = Weapon:subclass {
    glyph = {'(', C.lightGrey},
    name = 'broken dagger',
 
-   attackDice = {1, 2, 1},
+   attackDice = {1, 2, 0},
    level = 1,
 }
 
@@ -163,7 +165,7 @@ Spear = Weapon:subclass {
    glyph = {'|', C.white},
    name = 'spear',
 
-   attackDice = {1, 6, 3},
+   attackDice = {1, 6, 2},
    level = 5,
 }
 
@@ -171,15 +173,15 @@ LargeHammer = Weapon:subclass {
    glyph = {'(', C.darkGrey},
    name = 'large hammer',
 
-   attackDice = {1, 12, 0},
-   level = 5,
+   attackDice = {1, 10, 0},
+   level = 6,
 }
 
 TwoHandedSword = Weapon:subclass {
    glyph = {'(', C.lightGrey},
    name = 'two-handed sword',
 
-   attackDice = {2, 10, 0},
+   attackDice = {2, 6, 0},
    level = 7,
 }
 
@@ -338,8 +340,12 @@ PotionHealth = Potion:subclass {
 
    onDrink =
       function(self, player)
-         player.hp = player.hp + math.floor(player.maxHp/2)
-         player.hp = math.min(player.hp, player.maxHp)
+         if player.hp < player.maxHp then
+            ui.message('You feel much better.')
+            player.hp = player.maxHp
+         end
+         --player.hp = player.hp + math.floor(player.maxHp/2)
+         --player.hp = math.min(player.hp, player.maxHp)
       end,
 }
 
@@ -356,7 +362,7 @@ PotionNightVision = BoostingPotion:subclass {
    name = 'potion of night vision',
 
    boost = 'nightVision',
-   boostTurns = 50,
+   boostTurns = 150,
    level = 3,
 }
 
@@ -365,7 +371,7 @@ PotionSpeed = BoostingPotion:subclass {
    name = 'potion of speed',
 
    boost = 'speed',
-   boostTurns = 50,
+   boostTurns = 150,
    level = 4,
 }
 
@@ -374,7 +380,7 @@ PotionStrength = BoostingPotion:subclass {
    name = 'potion of strength',
 
    boost = 'strength',
-   boostTurns = 50,
+   boostTurns = 150,
    level = 4,
 }
 
@@ -386,13 +392,13 @@ Stone = Item:subclass {
 
 ArtifactWeapon = Weapon:subclass {
    glyph = {'(', C.lighterBlue},
-   name = 'Axe of Thorgrim',
+   name = 'Heavy Axe of Thorgrim',
 
-   attackDice = {2, 10, 2},
+   attackDice = {2, 5, 0},
    exclude = true,
    artifact = true,
 
-   speed = 3,
+   speed = -3,
 }
 
 ArtifactHelmet = Armor:subclass {
@@ -400,7 +406,7 @@ ArtifactHelmet = Armor:subclass {
    name = 'Helmet of the Dwarven Kings',
    slot = 'helmet',
 
-   armor = 6,
+   armor = 2,
    exclude = true,
    artifact = true,
 }

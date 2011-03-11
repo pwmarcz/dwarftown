@@ -44,17 +44,9 @@ function createWorld()
 
    --world:addWalls()
    --print('Connecting')
-   world:floodConnect()
+   world:floodConnect('closed')
+   world:addWalls()
    --world:print()
-
-   -- now close passage to the Mines
-   for y = H+3, (H+3)*2 do
-      for x = W-1, W+1 do
-         if not world:get(x, y).empty then
-            world:set(x, y, world.wall)
-         end
-      end
-   end
 
    world:placeOnMap(0, 0)
    map.sectors = world.sectors
@@ -125,10 +117,11 @@ function Forest:init()
       end
    end
 
+   --self.room:addWalls()
+   self.room:floodConnect()
    self.room:addWalls()
    self.room:addNearWalls(map.Tree)
    self.room:setLight(1)
-   self.room:floodConnect()
 
    for x = 1, self.w - 1 do
       local tile = self.room:get(x, self.h + 7)
@@ -151,7 +144,7 @@ end
 
 RatCaves = Sector:subclass {
    name = 'Rat Caves',
-   nItems = 10,
+   nItems = 20,
    itemsLevel = 2,
 
    nMonsters = 25,
@@ -173,7 +166,7 @@ Marketplace = Sector:subclass {
    nMonsters = 5,
    monsters = {mob.Rat, mob.Goblin},
 
-   itemsLevel = 3,
+   itemsLevel = 5,
 }
 
 function Marketplace:init()
@@ -297,8 +290,8 @@ Square = Sector:subclass {
    -- monsters placed manually indoors
    monsters = {mob.Ogre, mob.Goblin},
 
-   nItems = 15,
-   itemsLevel = 5,
+   nItems = 7,
+   itemsLevel = 4,
 }
 
 function Square:init()
@@ -343,8 +336,8 @@ end
 Mines = Sector:subclass {
    name = 'Dwarftown Mines',
 
-   nMonsters = 60,
-   monsters = {mob.Ogre, mob.Goblin, mob.Bugbear, mob.KillerBat},
+   nMonsters = 65,
+   monsters = {mob.Ogre, mob.Goblin, mob.Orc, mob.Bugbear, mob.KillerBat, mob.GlowingFungus},
 
    iItems = 20,
    itemsLevel = 8,

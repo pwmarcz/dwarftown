@@ -42,6 +42,8 @@ local command = {}
 local done = false
 
 function init()
+   local reason
+
    ui.init()
    map.init()
 
@@ -97,16 +99,24 @@ function mainLoop()
             end
          end
          if player.dead then
-            ui.promptEnter('[Game over. Press ENTER]')
+            -- use real name, not 'something' or item
+            local killer = player.killedBy.class.name
+            ui.promptEnter('[Game over: killed by %s. Press ENTER]', killer)
             done = true
+            reason = 'Killed by ' .. killer
          end
       elseif player.leaving then
          if player.nArtifacts == item.N_ARTIFACTS then
             ui.promptEnter('[Congratulations! You have won. Press ENTER]')
+            reason = 'Won the game'
          end
          done = true
       end
    end
+
+   reason = reason or 'Quit the game'
+   saveCharacterDump(reason)
+
    tcod.console.flush()
 end
 
@@ -244,4 +254,29 @@ function command.mapScreenshot()
    ui.message('Saving map screenshot...')
    ui.mapScreenshot()
    ui.message(C.green, 'Map screenshot saved.')
+end
+
+function saveCharacterDump(reason)
+   local f = io.open('character.txt', 'w')
+   if not f then
+      return
+   end
+   local function write(...)
+      f:write(string.format(...))
+   end
+   write('  %s character dump\n\n%s\n\n%s\n\n',
+         text.title, os.date(), reason)
+   write('  SCREENSHOT\n\n')
+   write(ui.stringScreenshot())
+   write('\n\n  LAST MESAGES\n\n')
+   for i = 1, 15 do
+      local n = #ui.messages-15+i
+      if ui.messages[n] then
+         write('%s\n', ui.messages[n].text)
+      end
+   end
+   write('\n  INVENTORY\n\n')
+   write(ui.stringItems(player.items))
+   write('\n')
+   f:close()
 end

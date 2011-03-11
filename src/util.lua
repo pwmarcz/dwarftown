@@ -21,7 +21,20 @@ function randomDir()
 end
 
 function dirTowards(x1, y1, x2, y2)
-   return sign(x2-x1), sign(y2-y1)
+   local dx, dy = x2-x1, y2-y1
+   if dx == 0 or dy == 0 then
+      return sign(dx), sign(dy)
+   else
+      local slope1 = math.abs(dx/dy)
+      local slope2 = 1/slope1
+      if slope1 < 0.5 then
+         return 0, sign(dy)
+      elseif slope2 < 0.5 then
+         return sign(dx), 0
+      else
+         return sign(dx), sign(dy)
+      end
+   end
 end
 
 function sign(x)
